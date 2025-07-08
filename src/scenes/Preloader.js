@@ -1,4 +1,4 @@
-import * as Phaser from "../phaser/phaser-3.87.0-core.js";
+import * as Phaser from "../phaser/phaser-3.87.0-full.js";
 
 import { Base64Manager } from "../utils/Base64Manager.js";
 import { LoadBase64Audio } from "../utils/LoadBase64Audio.js";

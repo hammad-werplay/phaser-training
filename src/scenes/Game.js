@@ -1,4 +1,4 @@
-import * as Phaser from "../phaser/phaser-3.87.0-core.js";
+import * as Phaser from "../phaser/phaser-3.87.0-full.js";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 export class Game extends Phaser.Scene {
@@ -937,6 +937,8 @@ export class Game extends Phaser.Scene {
 
 	create() {
 		this.adNetworkSetup();
+
+		console.log("Game scene created", this.matter);
 
 		this.initalizeGame();
 

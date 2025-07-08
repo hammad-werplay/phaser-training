@@ -1,4 +1,4 @@
-import * as Phaser from "./phaser/phaser-3.87.0-core.js";
+import * as Phaser from "./phaser/phaser-3.87.0-full.js";
 
 import { mraidAdNetworks, networkPlugin } from "./networkPlugin.js";
 
@@ -12,6 +12,13 @@ const gameConfig = {
 	width: window.innerWidth,
 	height: window.innerHeight,
 	gameTitle: "Playable Ad Template",
+	physics: {
+		default: "matter",
+		matter: {
+			gravity: { y: 1 },
+			debug: true,
+		},
+	},
 	scale: {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
