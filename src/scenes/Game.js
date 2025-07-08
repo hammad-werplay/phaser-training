@@ -528,6 +528,10 @@ export class Game extends Phaser.Scene {
 
 		this.initalizeGame();
 
+		const debugGraphic = this.matter.world.createDebugGraphic();
+		debugGraphic.setAlpha(0.5);
+		debugGraphic.setPosition(this.container.x, this.container.y);
+
 		this.input.on("pointerdown", () => {
 			if (!this.girlJumping) {
 				this.girlJumping = true;
