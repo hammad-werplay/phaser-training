@@ -1,6 +1,21 @@
 import * as Phaser from "../phaser/phaser-3.87.0-full.js";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
+
+class LavaShaderPipeline extends Phaser.Renderer.WebGL.Pipelines
+	.SinglePipeline {
+	constructor(game) {
+		super({
+			game,
+			renderer: game.renderer,
+			fragShader: game.cache.shader.get("lava_shader").fragmentSrc,
+		});
+	}
+	setTime(value) {
+		this.set1f("time", value);
+	}
+}
+
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
@@ -8,9 +23,9 @@ export class Game extends Phaser.Scene {
 		// Game state
 		this.boxGrid = [];
 		this.lavaTiles = [];
-		this.lavaWave = null; // Separate reference for the flowing lava wave
-		this.lavaWaveBaseY = 0; // Original Y position for wave motion
-		this.lavaWaveTime = 0; // Animation timer
+		this.lavaWave = null;
+		this.lavaWaveBaseY = 0;
+		this.lavaWaveTime = 0;
 		this.scoreValue = 15;
 		this.girlJumping = false;
 		this.lavaDrops = [];
@@ -401,63 +416,11 @@ export class Game extends Phaser.Scene {
 					this.createParticleEffects(pointer);
 				});
 
-				if (this.wallTop) {
-					this.matter.body.setPosition(this.wallTop, {
-						x: this.wallTop.position.x,
-						y: this.wallTop.position.y + 200,
-					});
-				}
-
 				rowArray.push(box);
 				this.container.add(box);
 			}
 			this.boxGrid.push(rowArray);
 		}
-	}
-
-	simulateGravityLavaFlow(container) {
-		console.log("simulateGravityLavaFlow started");
-		let anyChanges = false;
-
-		// Start from the top and work our way down, row by row
-		for (let row = 0; row < this.boxGrid.length - 1; row++) {
-			for (let col = 0; col < this.boxGrid[0].length; col++) {
-				const currentCell = this.boxGrid[row][col];
-				const belowCell = this.boxGrid[row + 1][col];
-
-				// If current position has lava and the space below is empty
-				if (
-					currentCell &&
-					this.lavaTiles.includes(currentCell) &&
-					belowCell === null
-				) {
-					console.log(
-						`Lava can flow from (${row}, ${col}) to (${row + 1}, ${col})`
-					);
-					this.createLavaAt(row + 1, col, container);
-					anyChanges = true;
-				}
-			}
-		}
-
-		// Also check if lava can flow from the animated lava wave at the top
-		// to any empty spaces in the top row
-		for (let col = 0; col < this.boxGrid[0].length; col++) {
-			if (this.boxGrid[0][col] === null) {
-				console.log(`Lava can flow from top to (0, ${col})`);
-				this.createLavaAt(0, col, container);
-				anyChanges = true;
-			}
-		}
-
-		// If we made any changes, check again after a short delay for cascading effects
-		if (anyChanges) {
-			this.time.delayedCall(200, () => {
-				this.simulateGravityLavaFlow(container);
-			});
-		}
-
-		console.log("simulateGravityLavaFlow finished, anyChanges:", anyChanges);
 	}
 
 	createParticleEffects(pointer) {
@@ -590,6 +553,12 @@ export class Game extends Phaser.Scene {
 		const radius = 8;
 		const bodyX = mouth.x - 180;
 		const bodyY = mouth.y + 180;
+
+		this.renderer.pipelines.add(
+			"LavaShader",
+			new LavaShaderPipeline(this.game)
+		);
+
 		this.time.addEvent({
 			delay: 100,
 			loop: true,
@@ -603,17 +572,17 @@ export class Game extends Phaser.Scene {
 				const body = this.matter.add.circle(bodyX, bodyY, radius, {
 					isStatic: false,
 					label: "water_drop",
-					restitution: 0.3,
-					friction: 0,
+					restitution: 0,
+					friction: 0.5,
 					frictionAir: 0.01,
 					density: 0.0005,
-					gravity: { y: 0.1 },
 				});
 
 				const sprite = this.add.image(bodyX, bodyY, "circle");
 				sprite.setDisplaySize(radius * 9, radius * 9);
 				sprite.setOrigin(0.5);
 				sprite.setAlpha(0.7);
+				sprite.setPipeline("LavaShader");
 				this.container.add(sprite);
 
 				this.lavaDrops.push({ body, sprite });
@@ -633,15 +602,29 @@ export class Game extends Phaser.Scene {
 			isStatic: true,
 			label: "wall_top",
 		});
-	}
 
-	update() {
 		this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
-			if (bodyA.label === "wall_top" || bodyB.label === "wall_top") {
-				console.log("Water hit the top wall sensor");
+			if (
+				(bodyA.label === "lava_drop" && bodyB.label === "grid_box") ||
+				(bodyB.label === "lava_drop" && bodyA.label === "grid_box")
+			) {
+				// Optional: adjust Y or stop lava
+				bodyA.position.y -= 2;
+				console.log("Lava drop hit a box", bodyA, bodyB);
 			}
 		});
+	}
 
+	update(time) {
+		const lavaPipeline = this.renderer.pipelines.get("LavaShader");
+		lavaPipeline?.setTime(time / 100);
+
+		for (const drop of this.lavaDrops) {
+			if (!drop.sprite || !drop.body) continue;
+
+			drop.sprite.x = drop.body.position.x;
+			drop.sprite.y = drop.body.position.y;
+		}
 		// Check for game over condition
 		if (this.scoreValue <= 0) {
 			// TODO: Implement game restart functionality

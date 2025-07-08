@@ -18,6 +18,7 @@ import { pipePNG } from '../../media/images_pipe.png.js';
 import { stoolPNG } from '../../media/images_stool.png.js';
 import { toyBlastLogoPNG } from '../../media/images_toy_blast_logo.png.js';
 import { yellowDimondPNG } from '../../media/images_yellowDimond.png.js';
+import { lavaFRAG } from '../../media/shaders_lava.frag.js';
 import { atlas1ATLAS } from '../../media/spine_atlas1.atlas.js';
 import { atlas1PNG } from '../../media/spine_atlas1.png.js';
 import { demosJSON } from '../../media/spine_demos.json.js';

@@ -22,6 +22,7 @@ import { FunnelGlowPNG } from "../../media/images_FunnelGlow.png.js";
 import { girlDeadPNG } from "../../media/spritesheets_girl_dead.png.js";
 import { lavaTilePNG } from "../../media/images_lava_tile.png.js";
 import { circlePNG } from "../../media/images_circle.png.js";
+import { lavaFRAG } from "../../media/shaders_lava.frag.js";
 
 export class Preloader extends Phaser.Scene {
 	constructor() {
@@ -67,6 +68,8 @@ export class Preloader extends Phaser.Scene {
 			frameWidth: 410,
 			frameHeight: 502,
 		});
+
+		this.load.glsl("lava_shader", lavaFRAG);
 
 		LoadBase64Audio(this, [{ key: "sound_fx", data: soundFxMP3 }]);
 
