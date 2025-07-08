@@ -237,11 +237,12 @@ export class Game extends Phaser.Scene {
 	placeLavaCollectorAtCenterBottom() {
 		const collectorKey = "lava_collector";
 		const collectorXPosition = this.gridLeftX + this.gridRightX;
-		const collectorYPosition = this.gridBottomY + 150;
+		const collectorYPosition = this.gridBottomY + 170;
 
 		const collector = this.add
 			.image(collectorXPosition, collectorYPosition, collectorKey)
-			.setOrigin(0.5, 1);
+			.setOrigin(0.5, 1)
+			.setScale(1.3);
 		this.container.add(collector);
 	}
 
@@ -355,6 +356,11 @@ export class Game extends Phaser.Scene {
 
 				box.setInteractive();
 				box.on("pointerdown", (pointer) => {
+					if (this.wallTop) {
+						this.matter.world.remove(this.wallTop);
+						this.wallTop = null;
+					}
+
 					this.scoreText.setText(`${--this.scoreValue}`);
 					const connected = this.collectConnectedBoxesBFS(row, col, box.boxKey);
 
@@ -591,7 +597,7 @@ export class Game extends Phaser.Scene {
 				if (this.lavaDrops.length > 150) {
 					const old = this.lavaDrops.shift();
 					old.sprite.destroy();
-					old.body.destroy();
+					this.matter.world.remove(old.body);
 				}
 
 				const body = this.matter.add.circle(bodyX, bodyY, radius, {
@@ -605,7 +611,7 @@ export class Game extends Phaser.Scene {
 				});
 
 				const sprite = this.add.image(bodyX, bodyY, "circle");
-				sprite.setDisplaySize(radius * 12, radius * 12);
+				sprite.setDisplaySize(radius * 9, radius * 9);
 				sprite.setOrigin(0.5);
 				sprite.setAlpha(0.7);
 				this.container.add(sprite);
