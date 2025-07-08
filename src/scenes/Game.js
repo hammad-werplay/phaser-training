@@ -13,6 +13,7 @@ export class Game extends Phaser.Scene {
 		this.lavaWaveTime = 0; // Animation timer
 		this.scoreValue = 15;
 		this.girlJumping = false;
+		this.lavaDrops = [];
 
 		// Game objects
 		this.girl = null;
@@ -199,117 +200,10 @@ export class Game extends Phaser.Scene {
 		this.container.add(girl);
 	}
 
-	flowLavaAboveBoxes() {
-		const lavaXPosition = this.gridLeftX;
-		const lavaYPosition = this.gridTopY - 5;
-		const lavaWidth = this.gridRightX - this.gridLeftX;
-		const lavaHeight = 80;
-
-		const lavaWave = this.createAnimatedLavaWave(
-			lavaXPosition,
-			lavaYPosition,
-			lavaWidth,
-			lavaHeight
-		);
-
-		this.container.add(lavaWave);
-		console.log(
-			"Lava wave created at:",
-			lavaXPosition,
-			lavaYPosition,
-			"size:",
-			lavaWidth,
-			lavaHeight
-		);
-
-		this.createLavaParticleSystem(lavaXPosition, lavaYPosition, lavaWidth);
-	}
-
-	createAnimatedLavaWave(x, y, width, height) {
-		const tile = this.add.tileSprite(x, y, width, height, "lava_tile");
-		tile.setOrigin(0, 1);
-		this.lavaWave = tile;
-		this.lavaWaveBaseY = y;
-		this.lavaWaveTime = 0;
-
-		this.tweens.add({
-			targets: tile,
-			tilePositionX: 64,
-			duration: 150,
-			repeat: -1,
-			yoyo: false,
-			ease: "Linear",
-		});
-
-		this.tweens.add({
-			targets: tile,
-			duration: 150,
-			yoyo: true,
-			repeat: -1,
-			ease: "Sine.easeInOut",
-		});
-
-		this.tweens.add({
-			targets: tile,
-			scaleY: 1.1,
-			duration: 200,
-			yoyo: true,
-			repeat: -1,
-			ease: "Sine.easeInOut",
-		});
-
-		return tile;
-	}
-
-	createLavaParticleSystem(x, y, width) {
-		this.lavaParticleTimer = this.time.addEvent({
-			delay: 200,
-			loop: true,
-			callback: () => {
-				if (this.lavaWave) {
-					const particleX = x + Math.random() * width;
-					const particleY = y - 10;
-
-					const particle = this.add
-						.image(particleX, particleY, "spark")
-						.setScale(Phaser.Math.FloatBetween(0.05, 0.12))
-						.setDepth(2);
-
-					const particleColors = [0xff3300, 0xff6600, 0xff9900, 0xffaa00];
-					const tint = Phaser.Utils.Array.GetRandom(particleColors);
-					particle.setTint(tint);
-
-					this.container.add(particle);
-
-					this.tweens.add({
-						targets: particle,
-						y: particleY - Phaser.Math.Between(80, 150),
-						x: particleX + Phaser.Math.Between(-30, 30),
-						alpha: 0,
-						scale: 0.02,
-						duration: Phaser.Math.Between(2000, 3500),
-						ease: "Cubic.easeOut",
-						onUpdate: (tween) => {
-							const progress = tween.progress;
-							const waveOffset = Math.sin(progress * Math.PI * 4) * 15;
-							particle.x =
-								particleX +
-								waveOffset +
-								progress * Phaser.Math.Between(-30, 30);
-						},
-						onComplete: () => {
-							this.container.remove(particle);
-							particle.destroy();
-						},
-					});
-				}
-			},
-		});
-	}
-
 	placeTwoPipesAtTopRight() {
 		const pipeKey = "pipe";
 
+		// Pipe 1 position
 		const pipe1X = this.container.width ? this.container.width / 2 : 300;
 		const pipe1Y = this.container.height
 			? -this.container.height / 2 - 100
@@ -322,10 +216,9 @@ export class Game extends Phaser.Scene {
 			.setScale(1.5);
 		this.container.add(pipeImage1);
 
-		const pipe2X = this.container.width ? this.container.width / 2 : 300;
-		const pipe2Y = this.container.height
-			? -this.container.height / 2 - 100
-			: -450;
+		// Pipe 2 position (above pipe 1)
+		const pipe2X = pipe1X;
+		const pipe2Y = pipe1Y - 200; // adjust spacing between them
 
 		const pipeImage2 = this.add
 			.image(pipe2X, pipe2Y, pipeKey)
@@ -333,6 +226,12 @@ export class Game extends Phaser.Scene {
 			.setOrigin(0.5, 1)
 			.setScale(1.5);
 		this.container.add(pipeImage2);
+
+		// 💾 Store mouth coordinates of both pipes for later use
+		this.pipeMouths = [
+			{ x: pipe1X - 30, y: pipe1Y - pipeImage1.displayHeight + 15 }, // adjust offset to match the mouth
+			{ x: pipe2X - 30, y: pipe2Y - pipeImage2.displayHeight + 15 },
+		];
 	}
 
 	placeLavaCollectorAtCenterBottom() {
@@ -344,6 +243,52 @@ export class Game extends Phaser.Scene {
 			.image(collectorXPosition, collectorYPosition, collectorKey)
 			.setOrigin(0.5, 1);
 		this.container.add(collector);
+	}
+
+	flowLavaAboveBoxes() {
+		const dropWidth = 16;
+		const lavaY = this.gridTopY - 77;
+
+		this.lavaDrops = [];
+		const radius = 8;
+		const dropSpacing = radius * 1.5;
+		for (let x = this.gridLeftX; x < this.gridRightX; x += dropSpacing) {
+			const body = this.matter.add.circle(
+				x + dropWidth / 2,
+				lavaY,
+				radius,
+
+				{
+					isStatic: false,
+					label: "water_drop",
+					restitution: 0.3,
+					friction: 0,
+					frictionAir: 0.01,
+					density: 0.0005,
+				}
+			);
+
+			const sprite = this.add.image(body.position.x, body.position.y, "circle");
+			sprite.setDisplaySize(radius * 2, radius * 2);
+			sprite.setOrigin(0.5);
+
+			this.container.add(sprite);
+			this.tweens.add({
+				targets: sprite,
+				duration: 1000,
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+			this.lavaDrops.push({ body, sprite });
+		}
+
+		this.events.on("update", () => {
+			for (const drop of this.lavaDrops) {
+				drop.sprite.x = drop.body.position.x;
+				drop.sprite.y = drop.body.position.y;
+			}
+		});
 	}
 
 	generateBoxes() {
@@ -396,7 +341,13 @@ export class Game extends Phaser.Scene {
 				const boxKey =
 					boxLayout[row % boxLayout.length]?.[col % boxLayout[0].length];
 
-				const box = this.add.image(x, y, boxKey).setOrigin(0, 1).setScale(0.12);
+				const box = this.matter.add
+					.image(x, y, boxKey, null, {
+						isStatic: true,
+						label: "grid_box",
+					})
+					.setOrigin(0, 1)
+					.setScale(0.12);
 
 				box.row = row;
 				box.col = col;
@@ -431,88 +382,31 @@ export class Game extends Phaser.Scene {
 					}
 
 					for (const { row, col, box } of connected) {
-						// Store the exact grid position before destroying the box
 						const gridRow = row;
 						const gridCol = col;
+
+						if (box.body?.label === "lava_drop") continue;
 
 						this.container.remove(box);
 						box.destroy();
 						this.boxGrid[row][col] = null;
-
-						const lavaX = this.gridLeftX + gridCol * this.boxWidth;
-						const lavaY = this.gridBottomY - gridRow * this.boxHeight;
-						const lavaStartY = lavaY - 100;
-						const lavaDrop = this.add
-							.image(lavaX, lavaStartY, "lava_tile")
-							.setOrigin(0, 1)
-							.setScale(0.03)
-							.setDepth(-1)
-							.setAlpha(0.8);
-
-						this.container.add(lavaDrop);
-						this.lavaTiles.push(lavaDrop);
-
-						// Update grid to track lava
-						this.boxGrid[gridRow][gridCol] = lavaDrop;
-
-						this.tweens.add({
-							targets: lavaDrop,
-							y: lavaY, // Move to exact grid position
-							duration: 300 + gridRow * 50,
-							alpha: 1,
-							ease: "Sine.easeInOut",
-							onComplete: () => {
-								// Add wavy flowing animation to match main lava wave
-								this.tweens.add({
-									targets: lavaDrop,
-									y: lavaY + 3,
-									duration: 1500 + Math.random() * 1000, // Vary duration for organic feel
-									yoyo: true,
-									repeat: -1,
-									ease: "Sine.easeInOut",
-								});
-
-								// Add subtle horizontal sway
-								this.tweens.add({
-									targets: lavaDrop,
-									x: lavaX + Math.sin(Math.random() * Math.PI) * 2,
-									duration: 2500 + Math.random() * 1000,
-									yoyo: true,
-									repeat: -1,
-									ease: "Sine.easeInOut",
-								});
-
-								// Add subtle alpha pulsing for heat effect
-								this.tweens.add({
-									targets: lavaDrop,
-									alpha: 0.6,
-									duration: 800 + Math.random() * 400,
-									yoyo: true,
-									repeat: -1,
-									ease: "Sine.easeInOut",
-								});
-							},
-						});
 					}
 
 					this.createParticleEffects(pointer);
 				});
+
+				if (this.wallTop) {
+					this.matter.body.setPosition(this.wallTop, {
+						x: this.wallTop.position.x,
+						y: this.wallTop.position.y + 200,
+					});
+				}
 
 				rowArray.push(box);
 				this.container.add(box);
 			}
 			this.boxGrid.push(rowArray);
 		}
-	}
-
-	handleLavaFlowAfterDestruction(connected, container) {
-		console.log("handleLavaFlowAfterDestruction called with:", connected);
-
-		// Add a delay before starting lava flow
-		this.time.delayedCall(300, () => {
-			console.log("Starting lava flow after delay");
-			this.simulateGravityLavaFlow(container);
-		});
 	}
 
 	simulateGravityLavaFlow(container) {
@@ -558,283 +452,6 @@ export class Game extends Phaser.Scene {
 		}
 
 		console.log("simulateGravityLavaFlow finished, anyChanges:", anyChanges);
-	}
-
-	createLavaAt(row, col, container) {
-		console.log(`Creating lava at (${row}, ${col})`);
-
-		// Calculate world position using same logic as boxes
-		const boxX = this.gridLeftX + col * this.boxWidth;
-		const boxY = this.gridBottomY - row * this.boxHeight;
-
-		// Convert to center position for lava tile
-		const lavaX = boxX + this.boxWidth / 2;
-		const lavaY = boxY - this.boxHeight / 2;
-
-		// Create the lava tile
-		const lava = this.add
-			.image(lavaX, lavaY, "lava_tile")
-			.setScale(this.boxScale * 0.8)
-			.setAlpha(0);
-
-		container.add(lava);
-
-		// Animate the lava appearing
-		this.tweens.add({
-			targets: lava,
-			alpha: 1,
-			scale: this.boxScale * 0.8,
-			duration: 300,
-			ease: "Sine.easeOut",
-			onComplete: () => {
-				// Add subtle flowing animation
-				this.tweens.add({
-					targets: lava,
-					y: lavaY + 2,
-					duration: 2000,
-					yoyo: true,
-					repeat: -1,
-					ease: "Sine.easeInOut",
-				});
-			},
-		});
-
-		// Update grid and lava tiles array
-		this.boxGrid[row][col] = lava;
-		this.lavaTiles.push(lava);
-	}
-
-	findLavaFlowPositions() {
-		console.log("findLavaFlowPositions");
-		const flowable = new Set();
-		const queue = [];
-
-		// Find all starting points for lava flow
-		// 1. From top row (empty spaces)
-		for (let col = 0; col < this.boxGrid[0].length; col++) {
-			if (this.boxGrid[0][col] === null) {
-				queue.push({ row: 0, col, depth: 0 });
-			}
-		}
-
-		// 2. From existing lava tiles in the grid
-		for (let row = 0; row < this.boxGrid.length; row++) {
-			for (let col = 0; col < this.boxGrid[0].length; col++) {
-				const cell = this.boxGrid[row][col];
-				if (cell && this.lavaTiles.includes(cell)) {
-					// Add adjacent empty spaces to queue
-					const directions = [
-						{ row: row - 1, col }, // up
-						{ row: row + 1, col }, // down
-						{ row, col: col - 1 }, // left
-						{ row, col: col + 1 }, // right
-					];
-
-					for (const dir of directions) {
-						if (
-							this.isValidPosition(dir.row, dir.col) &&
-							this.boxGrid[dir.row][dir.col] === null
-						) {
-							queue.push({ row: dir.row, col: dir.col, depth: 0 });
-						}
-					}
-				}
-			}
-		}
-
-		// BFS to find all reachable positions with depth for animation timing
-		while (queue.length > 0) {
-			const { row, col, depth } = queue.shift();
-			const key = `${row},${col}`;
-
-			if (
-				!this.isValidPosition(row, col) ||
-				this.boxGrid[row][col] !== null ||
-				flowable.has(key)
-			) {
-				continue;
-			}
-
-			flowable.add(key);
-
-			// Add adjacent empty spaces to queue with increased depth
-			const directions = [
-				{ row: row + 1, col }, // down (priority for gravity)
-				{ row, col: col - 1 }, // left
-				{ row, col: col + 1 }, // right
-				{ row: row - 1, col }, // up (lowest priority)
-			];
-
-			for (const dir of directions) {
-				const neighborKey = `${dir.row},${dir.col}`;
-				if (
-					this.isValidPosition(dir.row, dir.col) &&
-					this.boxGrid[dir.row][dir.col] === null &&
-					!flowable.has(neighborKey)
-				) {
-					queue.push({ row: dir.row, col: dir.col, depth: depth + 1 });
-				}
-			}
-		}
-
-		console.log("Flowable positions:", flowable);
-		return flowable;
-	}
-
-	isValidPosition(row, col) {
-		return (
-			row >= 0 &&
-			row < this.boxGrid.length &&
-			col >= 0 &&
-			col < this.boxGrid[0].length
-		);
-	}
-
-	animateLavaFlowTo(flowPositions, container) {
-		console.log("animateLavaFlowTo", flowPositions);
-		if (!this.lavaTiles) this.lavaTiles = [];
-
-		// Convert Set to Array and sort by row (top to bottom) for natural flow animation
-		const sortedPositions = Array.from(flowPositions)
-			.map((key) => {
-				const [row, col] = key.split(",").map(Number);
-				return { row, col, key };
-			})
-			.sort((a, b) => {
-				// Sort by row first (top to bottom), then by column
-				if (a.row !== b.row) return a.row - b.row;
-				return a.col - b.col;
-			});
-
-		// Animate lava flow with staggered delays
-		sortedPositions.forEach((pos, index) => {
-			const { row, col } = pos;
-
-			// Calculate world position using same logic as boxes
-			// Boxes use origin (0,1) so position is bottom-left corner
-			const boxX = this.gridLeftX + col * this.boxWidth;
-			const boxY = this.gridBottomY - row * this.boxHeight;
-
-			// Convert to center position for lava tile (default origin 0.5, 0.5)
-			const lavaX = boxX + this.boxWidth / 2;
-			const lavaY = boxY - this.boxHeight / 2;
-
-			// Find nearest existing lava tile as source
-			let sourceLava = null;
-			let minDistance = Infinity;
-
-			for (const existingLava of this.lavaTiles) {
-				const distance = Phaser.Math.Distance.Between(
-					existingLava.x,
-					existingLava.y,
-					lavaX,
-					lavaY
-				);
-				if (distance < minDistance) {
-					minDistance = distance;
-					sourceLava = existingLava;
-				}
-			}
-
-			// If no existing lava, create from top of the grid
-			if (!sourceLava) {
-				sourceLava = {
-					x: lavaX,
-					y: this.gridTopY,
-				};
-			}
-
-			// Create new lava tile
-			const lava = this.add
-				.image(sourceLava.x, sourceLava.y, "lava_tile")
-				.setScale(this.boxScale * 0.8) // Slightly smaller than boxes
-				.setAlpha(0.8);
-
-			container.add(lava);
-
-			// Animate lava flowing to position
-			this.tweens.add({
-				targets: lava,
-				x: lavaX,
-				y: lavaY,
-				alpha: 1,
-				duration: 400,
-				delay: index * 100, // Staggered animation
-				ease: "Sine.easeOut",
-				onComplete: () => {
-					// Add flowing animation
-					this.tweens.add({
-						targets: lava,
-						y: lavaY + 2,
-						duration: 2000,
-						yoyo: true,
-						repeat: -1,
-						ease: "Sine.easeInOut",
-					});
-				},
-			});
-
-			// Update grid and lava tiles array
-			this.boxGrid[row][col] = lava;
-			this.lavaTiles.push(lava);
-		});
-
-		console.log("==== After animateLavaFlowTo ====");
-	}
-
-	isOpenFromTop(row, col) {
-		for (let r = 0; r < row; r++) {
-			if (this.boxGrid[r][col] !== null) return false;
-		}
-		return true;
-	}
-
-	findReachableNullsFromTop() {
-		console.log("findReachableNullsFromTop");
-		const reachable = new Set();
-		const stack = [];
-
-		for (let row = 0; row < this.boxGrid.length; row++) {
-			for (let col = 0; col < this.boxGrid[0].length; col++) {
-				if (this.boxGrid[row][col] === null) {
-					stack.push({ row, col });
-				}
-			}
-		}
-		console.log("Starting stack:", stack);
-
-		while (stack.length > 0) {
-			const { row, col } = stack.pop();
-			const key = `${row},${col}`;
-
-			if (
-				row < 0 ||
-				row >= this.boxGrid.length ||
-				col < 0 ||
-				col >= this.boxGrid[0].length ||
-				this.boxGrid[row][col] !== null ||
-				reachable.has(key)
-			) {
-				continue;
-			}
-
-			reachable.add(key);
-
-			stack.push({ row: row - 1, col });
-			stack.push({ row: row + 1, col });
-			stack.push({ row, col: col - 1 });
-			stack.push({ row, col: col + 1 });
-		}
-
-		console.log("==== After findReachableNullsFromTop ====");
-
-		return reachable;
-	}
-
-	getBoxY(row) {
-		const y = this.gridBottomY - row * this.boxHeight;
-		console.log(`getBoxY(${row}) = ${y}`);
-		return y;
 	}
 
 	createParticleEffects(pointer) {
@@ -962,13 +579,67 @@ export class Game extends Phaser.Scene {
 				});
 			}
 		});
+
+		const mouth = Phaser.Utils.Array.GetRandom(this.pipeMouths);
+		const radius = 8;
+		const bodyX = mouth.x - 180;
+		const bodyY = mouth.y + 180;
+		this.time.addEvent({
+			delay: 100,
+			loop: true,
+			callback: () => {
+				if (this.lavaDrops.length > 150) {
+					const old = this.lavaDrops.shift();
+					old.sprite.destroy();
+					old.body.destroy();
+				}
+
+				const body = this.matter.add.circle(bodyX, bodyY, radius, {
+					isStatic: false,
+					label: "water_drop",
+					restitution: 0.3,
+					friction: 0,
+					frictionAir: 0.01,
+					density: 0.0005,
+					gravity: { y: 0.1 },
+				});
+
+				const sprite = this.add.image(bodyX, bodyY, "circle");
+				sprite.setDisplaySize(radius * 12, radius * 12);
+				sprite.setOrigin(0.5);
+				sprite.setAlpha(0.7);
+				this.container.add(sprite);
+
+				this.lavaDrops.push({ body, sprite });
+			},
+		});
+
+		this.matter.add.rectangle(this.gridLeftX, 400, 48, 1800, {
+			isStatic: true,
+			label: "wall_left",
+		});
+
+		this.matter.add.rectangle(this.gridRightX, 400, 48, 1800, {
+			isStatic: true,
+			label: "wall_right",
+		});
+		this.wallTop = this.matter.add.rectangle(this.gridTopY, 0, 700, 48, {
+			isStatic: true,
+			label: "wall_top",
+		});
 	}
 
 	update() {
+		this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
+			if (bodyA.label === "wall_top" || bodyB.label === "wall_top") {
+				console.log("Water hit the top wall sensor");
+			}
+		});
+
 		// Check for game over condition
 		if (this.scoreValue <= 0) {
 			// TODO: Implement game restart functionality
-			console.log("Game Over - Score reached 0");
+			// console.log("Game Over - Score reached 0");
 		}
 	}
 }

@@ -21,6 +21,7 @@ import { girlJumpPNG } from "../../media/spritesheets_girl_jump.png.js";
 import { FunnelGlowPNG } from "../../media/images_FunnelGlow.png.js";
 import { girlDeadPNG } from "../../media/spritesheets_girl_dead.png.js";
 import { lavaTilePNG } from "../../media/images_lava_tile.png.js";
+import { circlePNG } from "../../media/images_circle.png.js";
 
 export class Preloader extends Phaser.Scene {
 	constructor() {
@@ -56,6 +57,7 @@ export class Preloader extends Phaser.Scene {
 		this.load.image("pipe", pipePNG);
 		this.load.image("spark", FunnelGlowPNG);
 		this.load.image("lava_tile", lavaTilePNG);
+		this.load.image("circle", circlePNG);
 
 		this.load.spritesheet("girl_jump", girlJumpPNG, {
 			frameWidth: 418,
