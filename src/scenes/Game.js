@@ -229,8 +229,12 @@ export class Game extends Phaser.Scene {
 		const collectorXPosition = this.gridLeftX + this.gridRightX;
 		const collectorYPosition = this.gridBottomY + 170;
 
-		const collector = this.add
-			.image(collectorXPosition, collectorYPosition, collectorKey)
+		const collector = this.matter.add
+			.image(collectorXPosition, collectorYPosition, collectorKey, null, {
+				isStatic: true,
+				isSensor: true,
+				label: "lava_collector_sensor",
+			})
 			.setOrigin(0.5, 1)
 			.setScale(1.3);
 		this.container.add(collector);
@@ -481,6 +485,7 @@ export class Game extends Phaser.Scene {
 		this.scoreValue = 15;
 		this.girlJumping = false;
 		this.lavaDrops = [];
+		this.isGameOver = false;
 
 		// Game objects
 		this.girl = null;
@@ -599,14 +604,18 @@ export class Game extends Phaser.Scene {
 			label: "wall_top",
 		});
 
-		this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
-			if (
-				(bodyA.label === "lava_drop" && bodyB.label === "grid_box") ||
-				(bodyB.label === "lava_drop" && bodyA.label === "grid_box")
-			) {
-				// Optional: adjust Y or stop lava
-				bodyA.position.y -= 2;
-				console.log("Lava drop hit a box", bodyA, bodyB);
+		this.matter.world.on("collisionstart", (event) => {
+			for (const pair of event.pairs) {
+				const labels = [pair.bodyA.label, pair.bodyB.label];
+
+				if (
+					labels.includes("lava_collector_sensor") &&
+					labels.includes("water_drop") &&
+					!this.isGameOver
+				) {
+					this.isGameOver = true;
+					this.scene.launch("GameWonScene");
+				}
 			}
 		});
 	}
@@ -632,7 +641,6 @@ export class Game extends Phaser.Scene {
 		// Check for game over condition
 		if (this.scoreValue <= 0 && !this.isGameOver) {
 			this.isGameOver = true;
-			this.scene.pause();
 			this.scene.launch("GameOverScene");
 		}
 	}
