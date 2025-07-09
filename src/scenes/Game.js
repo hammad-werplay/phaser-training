@@ -227,17 +227,33 @@ export class Game extends Phaser.Scene {
 	placeLavaCollectorAtCenterBottom() {
 		const collectorKey = "lava_collector";
 		const collectorXPosition = this.gridLeftX + this.gridRightX;
-		const collectorYPosition = this.gridBottomY + 170;
+		const collectorYPosition = this.gridBottomY + 100;
 
 		const collector = this.matter.add
 			.image(collectorXPosition, collectorYPosition, collectorKey, null, {
 				isStatic: true,
-				isSensor: true,
-				label: "lava_collector_sensor",
+				isSensor: false,
 			})
 			.setOrigin(0.5, 1)
-			.setScale(1.3);
+			.setScale(1.4);
 		this.container.add(collector);
+
+		const width = 60;
+		const height = 10;
+		const sensor = Phaser.Physics.Matter.Matter.Bodies.rectangle(
+			collector.x,
+			collector.y - height / 2,
+			width,
+			height,
+			{
+				isSensor: true,
+				isStatic: true,
+				label: "lava_collector_sensor",
+			}
+		);
+
+		// 🔁 Replace default body
+		collector.setExistingBody(sensor);
 	}
 
 	flowLavaAboveBoxes() {
@@ -561,7 +577,7 @@ export class Game extends Phaser.Scene {
 		);
 
 		this.time.addEvent({
-			delay: 100,
+			delay: 30,
 			loop: true,
 			callback: () => {
 				if (this.lavaDrops.length > 150) {
