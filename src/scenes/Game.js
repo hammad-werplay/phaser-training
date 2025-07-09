@@ -272,10 +272,11 @@ export class Game extends Phaser.Scene {
 				{
 					isStatic: false,
 					label: "water_drop",
-					restitution: 0.3,
-					friction: 0,
+					restitution: 0.6, // Better bounce off boxes
+					friction: 0.3, // Some friction to prevent sliding through
 					frictionAir: 0.01,
-					density: 0.0005,
+					density: 0.001, // Slightly heavier for better physics
+					inertia: Infinity, // Prevent excessive spinning
 				}
 			);
 
@@ -359,6 +360,27 @@ export class Game extends Phaser.Scene {
 					})
 					.setOrigin(0, 1)
 					.setScale(0.12);
+
+				// Fix physics body to match the scaled visual size
+				const scaledWidth = box.displayWidth;
+				const scaledHeight = box.displayHeight;
+
+				// Create a new physics body that matches the visual size
+				const physicsBody = this.matter.bodies.rectangle(
+					box.x + scaledWidth / 2, // Center the physics body
+					box.y - scaledHeight / 2, // Adjust for origin
+					scaledWidth,
+					scaledHeight,
+					{
+						isStatic: true,
+						label: "grid_box",
+						restitution: 1.0, // Perfect bounce to prevent penetration
+						friction: 1.0, // Maximum friction to prevent sliding through
+					}
+				);
+
+				// Replace the default body with our properly sized one
+				box.setExistingBody(physicsBody);
 
 				box.row = row;
 				box.col = col;
@@ -541,9 +563,10 @@ export class Game extends Phaser.Scene {
 		this.scoreText = scoreText;
 		this.handleGameFunctionality();
 
-		const debugGraphic = this.matter.world.createDebugGraphic();
-		debugGraphic.setAlpha(0.5);
-		debugGraphic.setPosition(this.container.x, this.container.y);
+		// Disable debug graphics for production game
+		// const debugGraphic = this.matter.world.createDebugGraphic();
+		// debugGraphic.setAlpha(0.5);
+		// debugGraphic.setPosition(this.container.x, this.container.y);
 
 		this.input.on("pointerdown", () => {
 			if (!this.girlJumping) {
@@ -577,7 +600,7 @@ export class Game extends Phaser.Scene {
 		);
 
 		this.time.addEvent({
-			delay: 30,
+			delay: 60, // Reduced spawn rate to give collision system more time
 			loop: true,
 			callback: () => {
 				if (this.lavaDrops.length > 150) {
@@ -589,14 +612,15 @@ export class Game extends Phaser.Scene {
 				const body = this.matter.add.circle(bodyX, bodyY, radius, {
 					isStatic: false,
 					label: "water_drop",
-					restitution: 0,
-					friction: 0.5,
+					restitution: 0.6, // Better bounce off boxes
+					friction: 0.3, // Some friction to prevent sliding through
 					frictionAir: 0.01,
-					density: 0.0005,
+					density: 0.001, // Slightly heavier for better physics
+					inertia: Infinity, // Prevent excessive spinning
 				});
 
 				const sprite = this.add.image(bodyX, bodyY, "circle");
-				sprite.setDisplaySize(radius * 9, radius * 9);
+				sprite.setDisplaySize(radius * 4, radius * 4);
 				sprite.setOrigin(0.5);
 				sprite.setAlpha(0.7);
 				sprite.setPipeline("LavaShader");
@@ -620,6 +644,12 @@ export class Game extends Phaser.Scene {
 			label: "wall_top",
 		});
 
+		// Configure physics engine for better collision detection
+		this.matter.world.engine.positionIterations = 12;
+		this.matter.world.engine.velocityIterations = 10;
+		this.matter.world.engine.constraintIterations = 6;
+		this.matter.world.engine.timing.timeScale = 1;
+
 		this.matter.world.on("collisionstart", (event) => {
 			for (const pair of event.pairs) {
 				const labels = [pair.bodyA.label, pair.bodyB.label];
@@ -631,6 +661,54 @@ export class Game extends Phaser.Scene {
 				) {
 					this.isGameOver = true;
 					this.scene.launch("GameWonScene");
+				}
+
+				// Add collision handling for water drops hitting boxes
+				if (labels.includes("grid_box") && labels.includes("water_drop")) {
+					// Get the water drop body
+					const waterDropBody =
+						pair.bodyA.label === "water_drop" ? pair.bodyA : pair.bodyB;
+					const boxBody =
+						pair.bodyA.label === "grid_box" ? pair.bodyA : pair.bodyB;
+
+					// Calculate separation vector
+					const dx = waterDropBody.position.x - boxBody.position.x;
+					const dy = waterDropBody.position.y - boxBody.position.y;
+					const distance = Math.sqrt(dx * dx + dy * dy);
+
+					if (distance > 0) {
+						// Calculate minimum separation distance
+						const waterDropRadius = 8;
+						const minSeparation = waterDropRadius + 35; // Even larger buffer for clean separation
+
+						if (distance < minSeparation) {
+							// Bodies are overlapping - force immediate separation
+							const overlap = minSeparation - distance;
+							const separationDistance = overlap + 15; // Much larger extra buffer
+
+							// Calculate separation position
+							const separationX =
+								waterDropBody.position.x + (dx / distance) * separationDistance;
+							const separationY =
+								waterDropBody.position.y + (dy / distance) * separationDistance;
+
+							// Directly move the water drop to prevent overlap
+							this.matter.body.setPosition(waterDropBody, {
+								x: separationX,
+								y: separationY,
+							});
+
+							// Apply strong bounce velocity
+							const bounceVelocity = 6;
+							this.matter.body.setVelocity(waterDropBody, {
+								x: (dx / distance) * bounceVelocity,
+								y: Math.max((dy / distance) * bounceVelocity, -1), // Maintain downward flow
+							});
+
+							// Mark this drop for continuous monitoring
+							waterDropBody.needsMonitoring = true;
+						}
+					}
 				}
 			}
 		});
@@ -648,6 +726,9 @@ export class Game extends Phaser.Scene {
 		const lavaPipeline = this.renderer.pipelines.get("LavaShader");
 		lavaPipeline?.setTime(time / 100);
 
+		// Continuous overlap checking and prevention
+		this.preventWaterDropOverlaps();
+
 		for (const drop of this.lavaDrops) {
 			if (!drop.sprite || !drop.body) continue;
 
@@ -658,6 +739,57 @@ export class Game extends Phaser.Scene {
 		if (this.scoreValue <= 0 && !this.isGameOver) {
 			this.isGameOver = true;
 			this.scene.launch("GameOverScene");
+		}
+	}
+
+	preventWaterDropOverlaps() {
+		// Get all static box bodies
+		const boxBodies = [];
+		for (let row = 0; row < this.boxGrid.length; row++) {
+			for (let col = 0; col < this.boxGrid[row].length; col++) {
+				const box = this.boxGrid[row][col];
+				if (box && box.body) {
+					boxBodies.push(box.body);
+				}
+			}
+		}
+
+		// Check each water drop against all boxes
+		for (const drop of this.lavaDrops) {
+			if (!drop.body) continue;
+
+			for (const boxBody of boxBodies) {
+				const dx = drop.body.position.x - boxBody.position.x;
+				const dy = drop.body.position.y - boxBody.position.y;
+				const distance = Math.sqrt(dx * dx + dy * dy);
+
+				const waterDropRadius = 8;
+				const minSeparation = waterDropRadius + 40; // Large buffer
+
+				if (distance > 0 && distance < minSeparation) {
+					// Overlapping - force separation
+					const overlap = minSeparation - distance;
+					const separationDistance = overlap + 20;
+
+					const separationX =
+						drop.body.position.x + (dx / distance) * separationDistance;
+					const separationY =
+						drop.body.position.y + (dy / distance) * separationDistance;
+
+					// Move the water drop away
+					this.matter.body.setPosition(drop.body, {
+						x: separationX,
+						y: separationY,
+					});
+
+					// Apply separation velocity
+					const separationVelocity = 4;
+					this.matter.body.setVelocity(drop.body, {
+						x: (dx / distance) * separationVelocity,
+						y: Math.max((dy / distance) * separationVelocity, -2),
+					});
+				}
+			}
 		}
 	}
 }
