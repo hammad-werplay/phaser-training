@@ -19,31 +19,6 @@ class LavaShaderPipeline extends Phaser.Renderer.WebGL.Pipelines
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
-
-		// Game state
-		this.boxGrid = [];
-		this.lavaTiles = [];
-		this.lavaWave = null;
-		this.lavaWaveBaseY = 0;
-		this.lavaWaveTime = 0;
-		this.scoreValue = 15;
-		this.girlJumping = false;
-		this.lavaDrops = [];
-
-		// Game objects
-		this.girl = null;
-		this.scoreText = null;
-		this.container = null;
-		this.lavaParticleTimer = null;
-
-		// Grid positioning
-		this.gridLeftX = 0;
-		this.gridRightX = 0;
-		this.gridTopY = 0;
-		this.gridBottomY = 0;
-		this.boxWidth = 0;
-		this.boxHeight = 0;
-		this.boxScale = 0.12;
 	}
 
 	init() {
@@ -497,6 +472,31 @@ export class Game extends Phaser.Scene {
 	}
 
 	initalizeGame() {
+		// Game state
+		this.boxGrid = [];
+		this.lavaTiles = [];
+		this.lavaWave = null;
+		this.lavaWaveBaseY = 0;
+		this.lavaWaveTime = 0;
+		this.scoreValue = 15;
+		this.girlJumping = false;
+		this.lavaDrops = [];
+
+		// Game objects
+		this.girl = null;
+		this.scoreText = null;
+		this.container = null;
+		this.lavaParticleTimer = null;
+
+		// Grid positioning
+		this.gridLeftX = 0;
+		this.gridRightX = 0;
+		this.gridTopY = 0;
+		this.gridBottomY = 0;
+		this.boxWidth = 0;
+		this.boxHeight = 0;
+		this.boxScale = 0.12;
+
 		const midX = this.scale.width / 2;
 		const midY = this.scale.height / 2;
 
@@ -519,14 +519,6 @@ export class Game extends Phaser.Scene {
 		const { text: scoreText } = this.createScoreBox(100, 50, this.scoreValue);
 		this.scoreText = scoreText;
 		this.handleGameFunctionality();
-	}
-
-	create() {
-		this.adNetworkSetup();
-
-		console.log("Game scene created", this.matter);
-
-		this.initalizeGame();
 
 		const debugGraphic = this.matter.world.createDebugGraphic();
 		debugGraphic.setAlpha(0.5);
@@ -619,6 +611,14 @@ export class Game extends Phaser.Scene {
 		});
 	}
 
+	create() {
+		this.adNetworkSetup();
+
+		console.log("Game scene created", this.matter);
+
+		this.initalizeGame();
+	}
+
 	update(time) {
 		const lavaPipeline = this.renderer.pipelines.get("LavaShader");
 		lavaPipeline?.setTime(time / 100);
@@ -630,9 +630,10 @@ export class Game extends Phaser.Scene {
 			drop.sprite.y = drop.body.position.y;
 		}
 		// Check for game over condition
-		if (this.scoreValue <= 0) {
-			// TODO: Implement game restart functionality
-			// console.log("Game Over - Score reached 0");
+		if (this.scoreValue <= 0 && !this.isGameOver) {
+			this.isGameOver = true;
+			this.scene.pause();
+			this.scene.launch("GameOverScene");
 		}
 	}
 }

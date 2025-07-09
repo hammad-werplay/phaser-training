@@ -4,6 +4,7 @@ import { mraidAdNetworks, networkPlugin } from "./networkPlugin.js";
 
 import { Game } from "./scenes/Game";
 import { Preloader } from "./scenes/Preloader";
+import { GameOverScene } from "./scenes/GameOverScene.js";
 import { config } from "./config.js";
 
 const gameConfig = {
@@ -23,7 +24,7 @@ const gameConfig = {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
-	scene: [Preloader, Game],
+	scene: [Preloader, Game, GameOverScene],
 };
 
 function initializePhaserGame() {
