@@ -1,6 +1,10 @@
 import * as Phaser from "../phaser/phaser-3.87.0-full.js";
 
-import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
+import {
+	adStart,
+	onCtaPressed,
+	onAudioVolumeChange,
+} from "../networkPlugin.js";
 
 class LavaShaderPipeline extends Phaser.Renderer.WebGL.Pipelines
 	.SinglePipeline {

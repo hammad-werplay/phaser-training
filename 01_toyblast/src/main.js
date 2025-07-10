@@ -2,8 +2,8 @@ import * as Phaser from "./phaser/phaser-3.87.0-full.js";
 
 import { mraidAdNetworks, networkPlugin } from "./networkPlugin.js";
 
-import { Game } from "./scenes/Game";
-import { Preloader } from "./scenes/Preloader";
+import { Game } from "./scenes/Game.js";
+import { Preloader } from "./scenes/Preloader.js";
 import { GameOverScene } from "./scenes/GameOverScene.js";
 import { GameWonScene } from "./scenes/GameWonScene.js";
 import { config } from "./config.js";
