@@ -231,7 +231,7 @@ export class Game extends Phaser.Scene {
 	placeLavaCollectorAtCenterBottom() {
 		const collectorKey = "lava_collector";
 		const collectorXPosition = this.scale.width / 2;
-		const collectorYPosition = this.scale.height - 30;
+		const collectorYPosition = this.scale.height + 50;
 
 		const collector = this.matter.add
 			.image(collectorXPosition, collectorYPosition, collectorKey, null, {
@@ -242,10 +242,11 @@ export class Game extends Phaser.Scene {
 			.setScale(1)
 			.setDepth(10);
 		// this.container.add(collector);
+		this.collector = collector;
 
 		const width = 60;
 		const height = 10;
-		const sensor = Phaser.Physics.Matter.Matter.Bodies.rectangle(
+		const sensor = this.matter.add.rectangle(
 			collector.x,
 			collector.y - height / 2,
 			width,
@@ -258,7 +259,7 @@ export class Game extends Phaser.Scene {
 		);
 
 		// 🔁 Replace default body
-		collector.setExistingBody(sensor);
+		// collector.setExistingBody(sensor);
 	}
 
 	flowLavaAboveBoxes() {
@@ -733,6 +734,21 @@ export class Game extends Phaser.Scene {
 	}
 
 	update(time) {
+		for (const drop of this.lavaDrops) {
+			const collectorBounds = this.collector.getBounds();
+
+			if (
+				drop.body.position.y > this.gridBottomY + 100 &&
+				!this.isGameOver &&
+				drop.body.position.x > this.gridLeftX + 50 &&
+				drop.body.position.x < this.gridRightX - 150
+			) {
+				this.isGameOver = true;
+				this.scene.launch("GameWonScene");
+				break;
+			}
+		}
+
 		const lavaPipeline = this.renderer.pipelines.get("LavaShader");
 		lavaPipeline?.setTime(time / 100);
 
