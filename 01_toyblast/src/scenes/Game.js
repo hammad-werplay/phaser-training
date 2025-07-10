@@ -649,6 +649,11 @@ export class Game extends Phaser.Scene {
 			label: "wall_top",
 		});
 
+		this.matter.add.rectangle(0, 600, 700, 48, {
+			isStatic: true,
+			label: "ground",
+		});
+
 		// Configure physics engine for better collision detection
 		this.matter.world.engine.positionIterations = 12;
 		this.matter.world.engine.velocityIterations = 10;
