@@ -230,8 +230,8 @@ export class Game extends Phaser.Scene {
 
 	placeLavaCollectorAtCenterBottom() {
 		const collectorKey = "lava_collector";
-		const collectorXPosition = this.gridLeftX + this.gridRightX;
-		const collectorYPosition = this.gridBottomY + 100;
+		const collectorXPosition = this.scale.width / 2;
+		const collectorYPosition = this.scale.height - 30;
 
 		const collector = this.matter.add
 			.image(collectorXPosition, collectorYPosition, collectorKey, null, {
@@ -239,8 +239,9 @@ export class Game extends Phaser.Scene {
 				isSensor: false,
 			})
 			.setOrigin(0.5, 1)
-			.setScale(1.4);
-		this.container.add(collector);
+			.setScale(1)
+			.setDepth(10);
+		// this.container.add(collector);
 
 		const width = 60;
 		const height = 10;
