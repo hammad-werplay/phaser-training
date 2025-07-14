@@ -1,4 +1,5 @@
 import * as Phaser from "../phaser/phaser-3.87.0-core.js";
+import * as THREE from "three";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 export class Game extends Phaser.Scene {
@@ -8,6 +9,7 @@ export class Game extends Phaser.Scene {
 
 	init() {
 		console.log("%cSCENE::Game", "color: #fff; background: #f0f;");
+		console.log("%cVerify Threen JS", "color: #fff; background: #f0f;", THREE);
 	}
 
 	/**
