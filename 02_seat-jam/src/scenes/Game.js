@@ -73,8 +73,38 @@ export class Game extends Phaser.Scene {
 		this.scale.on("resize", drawNavbar, this);
 	}
 
+	createFooter() {
+		this.footerImage = this.add.image(0, 0, "footer").setOrigin(0.5, 1);
+
+		const drawFooter = () => {
+			const canvasWidth = this.scale.width;
+			const canvasHeight = this.scale.height;
+
+			const scaleX = canvasWidth / this.footerImage.width;
+			let scaleY;
+
+			if (canvasWidth < 600) {
+				scaleY = scaleX * 2.2;
+			} else {
+				scaleY = scaleX;
+			}
+
+			this.footerImage.setScale(scaleX, scaleY);
+
+			this.footerImage.x = canvasWidth / 2;
+			this.footerImage.y = canvasHeight;
+		};
+
+		drawFooter();
+
+		// Redraw on resize
+		this.scale.on("resize", drawFooter, this);
+	}
+
 	initializeScene() {
 		this.createNavbar();
+
+		this.createFooter();
 	}
 
 	create() {
