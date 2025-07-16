@@ -75,6 +75,19 @@ export class Game extends Phaser.Scene {
 
 	createFooter() {
 		this.footerImage = this.add.image(0, 0, "footer").setOrigin(0.5, 1);
+		this.downloadButton = this.add.image(0, 0, "button").setOrigin(0.5);
+		this.downloadText = this.add
+			.text(0, 0, "DOWNLOAD", {
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "24px",
+				color: "#ffffff",
+				fontFamily: "Arial",
+				fontStyle: "bold",
+				align: "center",
+				stroke: "#000000",
+				strokeThickness: 2,
+			})
+			.setOrigin(0.5);
 
 		const drawFooter = () => {
 			const canvasWidth = this.scale.width;
@@ -83,8 +96,8 @@ export class Game extends Phaser.Scene {
 			const scaleX = canvasWidth / this.footerImage.width;
 			let scaleY;
 
-			if (canvasWidth < 600) {
-				scaleY = scaleX * 2.2;
+			if (canvasWidth < 650) {
+				scaleY = scaleX * 2.1;
 			} else {
 				scaleY = scaleX;
 			}
@@ -93,9 +106,75 @@ export class Game extends Phaser.Scene {
 
 			this.footerImage.x = canvasWidth / 2;
 			this.footerImage.y = canvasHeight;
+
+			// Download Button
+			const footerWidth = this.footerImage.displayWidth;
+			const footerHeight = this.footerImage.displayHeight;
+			const buttonTargetHeight = footerHeight * 0.61;
+			const buttonScale = buttonTargetHeight / this.downloadButton.height;
+			this.downloadButton.setScale(buttonScale);
+
+			// Position the download button at right side of the footer
+			const buttonPadding = 20 * buttonScale;
+			this.downloadButton.x =
+				this.footerImage.x +
+				footerWidth / 2 -
+				this.downloadButton.displayWidth / 2 -
+				buttonPadding * 5;
+			this.downloadButton.y =
+				this.footerImage.y - footerHeight / 2 + buttonPadding;
+
+			// 🔠 Responsive text sizing
+			const textScale = Math.max(buttonTargetHeight * 0.2, 12);
+			this.downloadText.setFontSize(textScale);
+			this.downloadText.setPosition(
+				this.downloadButton.x,
+				this.downloadButton.y
+			);
+
+			this.downloadButton.baseScale = buttonScale;
+			this.downloadText.baseScale = textScale / 12;
 		};
 
 		drawFooter();
+
+		// 🟡 BUTTON PULSE
+		if (!this.downloadButton.pulseTween) {
+			this.downloadButton.pulseTween = this.tweens.add({
+				targets: this.downloadButton,
+				scaleX: {
+					getStart: () => this.downloadButton.baseScale,
+					getEnd: () => this.downloadButton.baseScale * 1.12,
+				},
+				scaleY: {
+					getStart: () => this.downloadButton.baseScale,
+					getEnd: () => this.downloadButton.baseScale * 1.12,
+				},
+				yoyo: true,
+				repeat: -1,
+				duration: 500,
+				ease: "Sine.easeInOut",
+			});
+		}
+
+		// 🟣 TEXT PULSE
+		if (!this.downloadText.pulseTween) {
+			this.downloadText.pulseTween = this.tweens.add({
+				targets: this.downloadText,
+				scaleX: {
+					getStart: () => this.downloadText.baseScale,
+					getEnd: () => this.downloadText.baseScale * 1.12,
+				},
+				scaleY: {
+					getStart: () => this.downloadText.baseScale,
+					getEnd: () => this.downloadText.baseScale * 1.12,
+				},
+				yoyo: true,
+				repeat: -1,
+				duration: 500,
+				ease: "Sine.easeInOut",
+			});
+		}
 
 		// Redraw on resize
 		this.scale.on("resize", drawFooter, this);
