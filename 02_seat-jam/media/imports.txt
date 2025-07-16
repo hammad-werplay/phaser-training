@@ -3,6 +3,7 @@ import { soundFxMP3 } from '../../media/audio_sound_fx.mp3.js';
 import { .DSStore } from '../../media/fonts_.DS_Store.js';
 import { MADETommySoftBlackWOFF2 } from '../../media/fonts_MADE-Tommy-Soft-Black.woff2.js';
 import { .DSStore } from '../../media/images_.DS_Store.js';
+import { BusWithTrackPNG } from '../../media/images_BusWithTrack.png.js';
 import { buttonPNG } from '../../media/images_button.png.js';
 import { footerPNG } from '../../media/images_footer.png.js';
 import { movesBoxPNG } from '../../media/images_movesBox.png.js';

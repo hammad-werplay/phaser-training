@@ -9,7 +9,7 @@ import { MADETommySoftBlackWOFF2 } from "../../media/fonts_MADE-Tommy-Soft-Black
 import { footerPNG } from "../../media/images_footer.png.js";
 import { buttonPNG } from "../../media/images_button.png.js";
 import { movesBoxPNG } from "../../media/images_movesBox.png.js";
-
+import { BusWithTrackPNG } from "../../media/images_BusWithTrack.png.js";
 export class Preloader extends Phaser.Scene {
 	constructor() {
 		super("Preload");
@@ -26,6 +26,7 @@ export class Preloader extends Phaser.Scene {
 		this.load.image("footer", footerPNG);
 		this.load.image("button", buttonPNG);
 		this.load.image("movesBox", movesBoxPNG);
+		this.load.image("busWithTrack", BusWithTrackPNG);
 
 		LoadBase64Audio(this, [{ key: "sound_fx", data: soundFxMP3 }]);
 	}

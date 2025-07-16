@@ -11,7 +11,6 @@ const gameConfig = {
 	parent: "ad-container",
 	width: window.innerWidth,
 	height: window.innerHeight,
-
 	backgroundColor: 0x87ceeb,
 	scale: {
 		mode: Phaser.Scale.RESIZE,
