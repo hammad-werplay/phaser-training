@@ -9,11 +9,12 @@ import { config } from "./config.js";
 const gameConfig = {
 	type: Phaser.AUTO,
 	parent: "ad-container",
-	width: 411,
-	height: 731,
+	width: window.innerWidth,
+	height: window.innerHeight,
+
 	backgroundColor: 0x87ceeb,
 	scale: {
-		mode: Phaser.Scale.FIT,
+		mode: Phaser.Scale.RESIZE,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
 	scene: [Preloader, Game],

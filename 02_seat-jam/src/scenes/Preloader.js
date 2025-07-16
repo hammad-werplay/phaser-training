@@ -5,6 +5,7 @@ import { LoadBase64Audio } from "../utils/LoadBase64Audio.js";
 import { LoadBase64BitmapFont } from "../utils/LoadBase64BitmapFont.js";
 import { adReady } from "../networkPlugin";
 import { soundFxMP3 } from "../../media/audio_sound_fx.mp3.js";
+import { MADETommySoftBlackWOFF2 } from "../../media/fonts_MADE-Tommy-Soft-Black.woff2.js";
 
 export class Preloader extends Phaser.Scene {
 	constructor() {
@@ -24,11 +25,26 @@ export class Preloader extends Phaser.Scene {
 
 	create() {
 		//  This may run before the Loader has completed, so don't use in-flight assets here
+		if (!document.getElementById("made-tommy-style")) {
+			const style = document.createElement("style");
+			style.id = "made-tommy-style";
+			style.innerHTML = `
+		@font-face {
+			font-family: 'MADE Tommy Soft';
+			src: url(${MADETommySoftBlackWOFF2}) format('woff2');
+			font-weight: 900;
+			font-style: normal;
+		}
+	`;
+			document.head.appendChild(style);
+		}
 	}
 
 	base64LoaderComplete() {
 		adReady();
 
-		this.scene.start("Game");
+		this.time.delayedCall(200, () => {
+			this.scene.start("Game");
+		});
 	}
 }

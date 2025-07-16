@@ -23,8 +23,64 @@ export class Game extends Phaser.Scene {
 		onAudioVolumeChange(this.scene);
 	}
 
+	createNavbar() {
+		const barHeight = 50;
+
+		// nav background
+		this.navbarBg = this.add.graphics();
+
+		// centered text
+		this.navbarText = this.add.text(
+			0,
+			0,
+			"Can You Pass This level in 7 Moves?",
+			{
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "20px",
+				color: "#ffffff",
+				fontStyle: "bold",
+				align: "center",
+			}
+		);
+
+		const drawNavbar = () => {
+			const canvasWidth = this.scale.width;
+
+			// Calculate font size
+			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
+			this.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			while (this.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
+				fontSize -= 1;
+				this.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			}
+
+			// Calculate nav height
+			const dynamicBarHeight = Math.max(50, this.navbarText.height + 20);
+
+			// Draw background bar
+			this.navbarBg.clear();
+			this.navbarBg.fillStyle(0x000000, 1);
+			this.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
+
+			// Center the text horizontally and vertically
+			this.navbarText.x = canvasWidth / 2 - this.navbarText.width / 2;
+			this.navbarText.y = dynamicBarHeight / 2 - this.navbarText.height / 2;
+		};
+
+		drawNavbar();
+
+		// Redraw on resize
+		this.scale.on("resize", drawNavbar, this);
+	}
+
+	initializeScene() {
+		this.createNavbar();
+	}
+
 	create() {
 		this.adNetworkSetup();
+
+		this.initializeScene();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
