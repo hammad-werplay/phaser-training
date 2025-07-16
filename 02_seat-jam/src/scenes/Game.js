@@ -90,41 +90,31 @@ export class Game extends Phaser.Scene {
 			.setOrigin(0.5);
 
 		const drawFooter = () => {
-			const canvasWidth = this.scale.width;
-			const canvasHeight = this.scale.height;
+			const { width: canvasWidth, height: canvasHeight } = this.scale;
 
+			// Footer scaling
 			const scaleX = canvasWidth / this.footerImage.width;
-			let scaleY;
-
-			if (canvasWidth < 650) {
-				scaleY = scaleX * 2.1;
-			} else {
-				scaleY = scaleX;
-			}
-
+			const scaleY = canvasWidth < 650 ? scaleX * 2.1 : scaleX;
 			this.footerImage.setScale(scaleX, scaleY);
+			this.footerImage.setPosition(canvasWidth / 2, canvasHeight);
 
-			this.footerImage.x = canvasWidth / 2;
-			this.footerImage.y = canvasHeight;
-
-			// Download Button
+			// Download Button scaling
 			const footerWidth = this.footerImage.displayWidth;
 			const footerHeight = this.footerImage.displayHeight;
 			const buttonTargetHeight = footerHeight * 0.61;
 			const buttonScale = buttonTargetHeight / this.downloadButton.height;
-			this.downloadButton.setScale(buttonScale);
 
-			// Position the download button at right side of the footer
 			const buttonPadding = 20 * buttonScale;
-			this.downloadButton.x =
+			this.downloadButton.setScale(buttonScale);
+			this.downloadButton.setPosition(
 				this.footerImage.x +
-				footerWidth / 2 -
-				this.downloadButton.displayWidth / 2 -
-				buttonPadding * 5;
-			this.downloadButton.y =
-				this.footerImage.y - footerHeight / 2 + buttonPadding;
+					footerWidth / 2 -
+					this.downloadButton.displayWidth / 2 -
+					5 * 20 * buttonScale,
+				this.footerImage.y - footerHeight / 2 + 20 * buttonScale
+			);
 
-			// 🔠 Responsive text sizing
+			// Text scaling
 			const textScale = Math.max(buttonTargetHeight * 0.2, 12);
 			this.downloadText.setFontSize(textScale);
 			this.downloadText.setPosition(
@@ -132,52 +122,43 @@ export class Game extends Phaser.Scene {
 				this.downloadButton.y
 			);
 
+			// Store base scale for tweening
 			this.downloadButton.baseScale = buttonScale;
 			this.downloadText.baseScale = textScale / 12;
 		};
 
+		// Initial draw
 		drawFooter();
-
-		// 🟡 BUTTON PULSE
-		if (!this.downloadButton.pulseTween) {
-			this.downloadButton.pulseTween = this.tweens.add({
-				targets: this.downloadButton,
-				scaleX: {
-					getStart: () => this.downloadButton.baseScale,
-					getEnd: () => this.downloadButton.baseScale * 1.12,
-				},
-				scaleY: {
-					getStart: () => this.downloadButton.baseScale,
-					getEnd: () => this.downloadButton.baseScale * 1.12,
-				},
-				yoyo: true,
-				repeat: -1,
-				duration: 500,
-				ease: "Sine.easeInOut",
-			});
-		}
-
-		// 🟣 TEXT PULSE
-		if (!this.downloadText.pulseTween) {
-			this.downloadText.pulseTween = this.tweens.add({
-				targets: this.downloadText,
-				scaleX: {
-					getStart: () => this.downloadText.baseScale,
-					getEnd: () => this.downloadText.baseScale * 1.12,
-				},
-				scaleY: {
-					getStart: () => this.downloadText.baseScale,
-					getEnd: () => this.downloadText.baseScale * 1.12,
-				},
-				yoyo: true,
-				repeat: -1,
-				duration: 500,
-				ease: "Sine.easeInOut",
-			});
-		}
 
 		// Redraw on resize
 		this.scale.on("resize", drawFooter, this);
+
+		// Pulse animations
+		this.startPulseTween(
+			this.downloadButton,
+			() => this.downloadButton.baseScale
+		);
+		this.startPulseTween(this.downloadText, () => this.downloadText.baseScale);
+	}
+
+	startPulseTween(target, getBaseScale) {
+		if (target.pulseTween) return;
+
+		target.pulseTween = this.tweens.add({
+			targets: target,
+			scaleX: {
+				getStart: getBaseScale,
+				getEnd: () => getBaseScale() * 1.12,
+			},
+			scaleY: {
+				getStart: getBaseScale,
+				getEnd: () => getBaseScale() * 1.12,
+			},
+			yoyo: true,
+			repeat: -1,
+			duration: 500,
+			ease: "Sine.easeInOut",
+		});
 	}
 
 	initializeScene() {
