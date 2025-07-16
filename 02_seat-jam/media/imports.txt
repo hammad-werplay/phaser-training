@@ -5,3 +5,4 @@ import { MADETommySoftBlackWOFF2 } from '../../media/fonts_MADE-Tommy-Soft-Black
 import { .DSStore } from '../../media/images_.DS_Store.js';
 import { buttonPNG } from '../../media/images_button.png.js';
 import { footerPNG } from '../../media/images_footer.png.js';
+import { movesBoxPNG } from '../../media/images_movesBox.png.js';

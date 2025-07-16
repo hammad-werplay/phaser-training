@@ -65,6 +65,9 @@ export class Game extends Phaser.Scene {
 			// Center the text horizontally and vertically
 			this.navbarText.x = canvasWidth / 2 - this.navbarText.width / 2;
 			this.navbarText.y = dynamicBarHeight / 2 - this.navbarText.height / 2;
+
+			// Store nav height
+			this.navbarHeight = dynamicBarHeight;
 		};
 
 		drawNavbar();
@@ -161,9 +164,59 @@ export class Game extends Phaser.Scene {
 		});
 	}
 
+	createMovesBox() {
+		// Moves box and text
+		this.movesBox = this.add.image(0, 0, "movesBox").setOrigin(1, 0);
+		this.moveCountText = this.add
+			.text(0, 0, "7", {
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "64px",
+				color: "#ffffff",
+				fontStyle: "bold",
+				align: "center",
+				stroke: "#000000",
+				strokeThickness: 2,
+			})
+			.setOrigin(0.5);
+
+		const drawMovesBox = () => {
+			const padding = 10;
+			const canvasWidth = this.scale.width;
+			const navBarHeight = this.navbarHeight || 50;
+
+			// Moves box scaling
+			const boxScale = canvasWidth < 450 ? 0.33 : 0.7;
+			this.movesBox.setScale(boxScale);
+
+			// Position: top-right under navbar
+			this.movesBox.x = canvasWidth;
+			this.movesBox.y = navBarHeight + padding;
+
+			// Responsive font size
+			const maxFontSize = this.movesBox.displayHeight * 0.5;
+			const finalFontSize = Math.min(40, maxFontSize);
+
+			this.moveCountText.setStyle({
+				fontSize: `${Math.floor(finalFontSize)}px`,
+			});
+
+			// Center text inside box
+			this.moveCountText.setPosition(
+				this.movesBox.x - this.movesBox.displayWidth / 2 + 15,
+				this.movesBox.y + this.movesBox.displayHeight / 2
+			);
+		};
+
+		// Initial draw
+		drawMovesBox();
+
+		// Redraw on resize
+		this.scale.on("resize", drawMovesBox, this);
+	}
+
 	initializeScene() {
 		this.createNavbar();
-
+		this.createMovesBox();
 		this.createFooter();
 	}
 
