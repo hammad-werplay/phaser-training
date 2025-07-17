@@ -396,14 +396,89 @@ export class Game extends Phaser.Scene {
 		this.createFooter();
 	}
 
+	setupThreeJS() {
+		// Canvas for ThreeJS
+		this.threeCanvas = document.createElement("canvas");
+		this.threeCanvas.style.position = "absolute";
+		this.threeCanvas.style.top = "0";
+		this.threeCanvas.style.left = "0";
+		this.threeCanvas.style.zIndex = "1";
+		this.threeCanvas.style.pointerEvents = "none";
+		this.threeCanvas.style.backgroundColor = "rgba(0,255,0,0.1)";
+		document.body.appendChild(this.threeCanvas);
+
+		// Camera Setup
+		const aspect = window.innerWidth / window.innerHeight;
+		const frustumHeight = 5;
+		const frustumWidth = frustumHeight * aspect;
+		this.camera = new THREE.OrthographicCamera(
+			-frustumWidth / 2,
+			frustumWidth / 2,
+			frustumHeight / 2,
+			-frustumHeight / 2,
+			0.1,
+			1000
+		);
+		this.camera.position.set(0, 0.5, 5);
+		this.camera.lookAt(0, 0.5, 0);
+
+		// ThreeJS Scene
+		this.threeScene = new THREE.Scene();
+
+		// Setup Lights
+		const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+		const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+		directionalLight.position.set(0, 10, 8);
+
+		this.threeScene.add(ambientLight);
+		this.threeScene.add(directionalLight);
+
+		// Setup Raycaster for Click Detection
+		this.raycaster = new THREE.Raycaster();
+		this.pointer = new THREE.Vector2();
+
+		this.loadedModels.Robot.object.scale.set(0.001, 0.001, 0.001);
+		this.threeScene.add(this.loadedModels.Robot.object);
+		this.loadedModels.Robot.object.traverse((child) => {
+			if (child.isMesh) {
+				// This forces a visible color
+				child.material = new THREE.MeshNormalMaterial();
+			}
+		});
+
+		// Remove old debug box if exists
+		if (this.boundingBoxHelper) {
+			this.threeScene.remove(this.boundingBoxHelper);
+		}
+
+		// ThreeJS Renderer
+		this.threeRenderer = new THREE.WebGLRenderer({
+			canvas: this.threeCanvas,
+			alpha: true,
+		});
+		this.threeRenderer.setSize(window.innerWidth, window.innerHeight);
+		this.threeRenderer.setPixelRatio(window.devicePixelRatio);
+		this.isRenderingThree = true;
+	}
+
 	create() {
 		this.adNetworkSetup();
 
+		this.loadedModels = this.registry.get("loadedModels");
+		console.log("Models", this.loadedModels.Robot);
+
 		this.initializeScene();
+		this.setupThreeJS();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
 			onCtaPressed();
 		});
+	}
+
+	update() {
+		if (this.threeRenderer) {
+			this.threeRenderer.render(this.threeScene, this.camera);
+		}
 	}
 }

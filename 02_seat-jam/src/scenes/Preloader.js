@@ -1,4 +1,5 @@
 import * as Phaser from "../phaser/phaser-3.87.0-core.js";
+import * as THREE from "three";
 
 import { Base64Manager } from "../utils/Base64Manager.js";
 import { LoadBase64Audio } from "../utils/LoadBase64Audio.js";
@@ -10,9 +11,23 @@ import { footerPNG } from "../../media/images_footer.png.js";
 import { buttonPNG } from "../../media/images_button.png.js";
 import { movesBoxPNG } from "../../media/images_movesBox.png.js";
 import { BusWithTrackPNG } from "../../media/images_BusWithTrack.png.js";
+
+// Models
+import { FBXLoader } from "three/examples/jsm/Addons.js";
+import { RobotFBX } from "../../media/models_Robot.fbx.js";
+
 export class Preloader extends Phaser.Scene {
 	constructor() {
 		super("Preload");
+
+		this.loadedModels = {};
+		this.modelQueue = [
+			{
+				key: "Robot",
+				url: RobotFBX,
+				position: { x: -5, y: 15, z: 5 },
+			},
+		];
 	}
 
 	init() {
@@ -48,11 +63,118 @@ export class Preloader extends Phaser.Scene {
 		}
 	}
 
-	base64LoaderComplete() {
-		adReady();
+	loadModelsNormally() {
+		if (!this.threeLoader) {
+			this.threeLoader = new FBXLoader();
+		}
 
+		this.loadNextModelNormal();
+	}
+
+	loadNextModelNormal() {
+		if (this.modelQueue.length === 0) {
+			this.startGame();
+			return;
+		}
+
+		const modelConfig = this.modelQueue.shift();
+
+		// Convert data URL to blob
+		const base64 = modelConfig.url.split(",")[1];
+		const binary = atob(base64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+
+		const blob = new Blob([bytes.buffer], { type: "application/octet-stream" });
+		const url = URL.createObjectURL(blob);
+
+		const glowMaterial = new THREE.MeshStandardMaterial({
+			color: 0xffffff, // Base color
+			emissive: 0xffd700, // Glow color (golden)
+			emissiveIntensity: 1.5, // Adjust glow strength
+			roughness: 0.5,
+			metalness: 0.8,
+		});
+
+		// Load model
+		this.threeLoader.load(
+			url,
+			(object) => {
+				// Store loaded model and config
+				this.loadedModels[modelConfig.key] = {
+					object: object,
+					config: modelConfig,
+				};
+
+				// Load and apply texture if available
+				if (modelConfig.texture) {
+					const textureLoader = new THREE.TextureLoader();
+					textureLoader.load(
+						modelConfig.texture,
+						(texture) => {
+							texture.colorSpace = THREE.SRGBColorSpace;
+
+							// Traverse the model and apply the texture
+							object.traverse((child) => {
+								if (child.isMesh) {
+									child.material = new THREE.MeshStandardMaterial({
+										map: texture,
+									});
+									const glowColor = 0xffd700;
+								}
+							});
+
+							for (let i = 1; i <= 3; i++) {
+								const glowMaterial = new THREE.MeshBasicMaterial({
+									color: glowColor,
+									transparent: true,
+									opacity: 0.2 / i, // Reduce opacity for outer layers
+									side: THREE.BackSide,
+									blending: THREE.AdditiveBlending,
+								});
+
+								const glowModel = child.clone();
+								glowModel.material = glowMaterial;
+								glowModel.scale.multiplyScalar(1 + i * 0.05); // Increase size for layers
+								object.add(glowModel); // Attach glow to the model
+							}
+						},
+						undefined,
+						(err) => console.error("Error loading texture:", err)
+					);
+				}
+
+				// Cleanup
+				URL.revokeObjectURL(url);
+
+				// Load next model
+				this.loadNextModelNormal();
+			},
+			(xhr) => {
+				const percent = Math.round((xhr.loaded / xhr.total) * 100);
+			},
+			(error) => {
+				console.error(`Error loading model ${modelConfig.key}:`, error);
+				this.loadNextModelNormal();
+			}
+		);
+	}
+
+	startGame() {
+		// Store models in registry to access from other scenes
+		this.registry.set("loadedModels", this.loadedModels);
+
+		// Start the game scene
 		this.time.delayedCall(200, () => {
 			this.scene.start("Game");
 		});
+	}
+	base64LoaderComplete() {
+		adReady();
+
+		// Load the models
+		this.loadModelsNormally();
 	}
 }
