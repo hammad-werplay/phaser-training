@@ -2,12 +2,23 @@ import * as Phaser from "../phaser/phaser-3.87.0-core.js";
 import * as THREE from "three";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
+import { Grid, PathFinder } from "./Mechanics.js";
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
 
 		this.totalRows = 6;
 		this.totalCols = 4;
+		this.seats = [
+			[1, 1],
+			[1, 2],
+			[2, 1],
+			[2, 2],
+			[3, 1],
+			[3, 2],
+			[4, 1],
+			[4, 2],
+		];
 	}
 
 	init() {
@@ -254,9 +265,15 @@ export class Game extends Phaser.Scene {
 	}
 
 	createInvisibleGrid() {
-		const cellWidth = 55;
-		const cellHeight = 40;
+		const CELL_WIDTH = 55;
+		const CELL_HEIGHT = 40;
+		const OFFSET_X = 105;
+		const OFFSET_Y = 205;
 		const gridCells = [];
+
+		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
+		this.pathFinder = new PathFinder(this.grid);
+		this.selectedCell = null;
 
 		const drawGrid = () => {
 			gridCells.forEach((cell) => cell.destroy());
@@ -265,29 +282,59 @@ export class Game extends Phaser.Scene {
 			const imgWidth = this.mainSceneBg.displayWidth;
 			const imgHeight = this.mainSceneBg.displayHeight;
 
-			const rows = Math.floor(imgHeight / cellHeight);
-			const cols = Math.floor(imgWidth / cellWidth);
+			const rows = Math.floor(imgHeight / CELL_HEIGHT);
+			const cols = Math.floor(imgWidth / CELL_WIDTH);
 
-			const startX = this.mainSceneBg.x - imgWidth / 2 + 105;
-			const startY = this.mainSceneBg.y - imgHeight / 2 + 205;
+			const startX = this.mainSceneBg.x - imgWidth / 2 + OFFSET_X;
+			const startY = this.mainSceneBg.y - imgHeight / 2 + OFFSET_Y;
 
 			for (let row = 0; row < this.totalRows; row++) {
 				for (let col = 0; col < this.totalCols; col++) {
-					const x = startX + col * cellWidth + cellWidth / 2;
-					const y = startY + row * cellHeight + cellHeight / 2;
+					const logicCell = this.grid.getCell(row, col);
 
-					const cell = this.add.rectangle(
-						x,
-						y,
-						cellWidth,
-						cellHeight,
-						0xff0000,
+					const x = startX + col * CELL_WIDTH + CELL_WIDTH / 2;
+					const y = startY + row * CELL_HEIGHT + CELL_HEIGHT / 2;
+
+					const cellRect = this.add.rectangle(x, y, CELL_WIDTH, CELL_HEIGHT);
+					cellRect.setInteractive();
+					cellRect.setStrokeStyle(1, 0xff0000);
+					cellRect.setFillStyle(
+						logicCell.type === "seat" ? 0x00ff00 : 0x000000,
 						0.2
 					);
-					cell.setStrokeStyle(1, 0xff0000);
-					cell.setInteractive();
 
-					gridCells.push(cell);
+					logicCell.visual = cellRect;
+
+					cellRect.on("pointerdown", () => {
+						if (!this.selectedCell) {
+							this.selectedCell = logicCell;
+							this.selectedCell.visual.setFillStyle(0x00ff00, 0.5);
+							return;
+						}
+
+						if (this.selectedCell.key() === logicCell.key()) {
+							this.selectedCell.visual.setFillStyle(0x000000, 0.2);
+							this.selectedCell = null;
+							return;
+						}
+
+						const start = this.selectedCell;
+						const end = logicCell;
+
+						const path = this.pathFinder.findShortestPath(start, end);
+
+						if (!path) {
+							console.error("No path found");
+							this.selectedCell = null;
+							return;
+						}
+
+						this.movePlayerAlongPath(path);
+
+						this.selectedCell = null;
+					});
+
+					gridCells.push(cellRect);
 				}
 			}
 		};
@@ -297,6 +344,48 @@ export class Game extends Phaser.Scene {
 
 		// Redraw on resize
 		this.scale.on("resize", drawGrid, this);
+	}
+
+	movePlayerAlongPath(path) {
+		if (!path || path.length === 0) {
+			console.error("No path found");
+			return;
+		}
+
+		console.log("Path:", path);
+
+		let index = 0;
+		let previousCell = null;
+
+		const interval = setInterval(() => {
+			if (index >= path.length) {
+				clearInterval(interval);
+				return;
+			}
+
+			const cell = path[index];
+
+			if (previousCell && previousCell.visual) {
+				console.log("Prev Cell:", previousCell);
+				previousCell.visual.setFillStyle(0x000000, 0.2);
+			}
+
+			if (cell.visual) {
+				console.log("Curr Cell:", cell);
+				cell.visual.setFillStyle(0x00ff00, 0.5);
+			}
+
+			if (index === path.length - 1) {
+				clearInterval(interval);
+
+				setTimeout(() => {
+					cell.isBlocked = true;
+				}, 500);
+			}
+
+			previousCell = cell;
+			index++;
+		}, 500);
 	}
 
 	initializeScene() {
