@@ -5,6 +5,9 @@ import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
+
+		this.totalRows = 6;
+		this.totalCols = 4;
 	}
 
 	init() {
@@ -250,10 +253,57 @@ export class Game extends Phaser.Scene {
 		this.scale.on("resize", drawMainScene, this);
 	}
 
+	createInvisibleGrid() {
+		const cellWidth = 55;
+		const cellHeight = 40;
+		const gridCells = [];
+
+		const drawGrid = () => {
+			gridCells.forEach((cell) => cell.destroy());
+			gridCells.length = 0;
+
+			const imgWidth = this.mainSceneBg.displayWidth;
+			const imgHeight = this.mainSceneBg.displayHeight;
+
+			const rows = Math.floor(imgHeight / cellHeight);
+			const cols = Math.floor(imgWidth / cellWidth);
+
+			const startX = this.mainSceneBg.x - imgWidth / 2 + 105;
+			const startY = this.mainSceneBg.y - imgHeight / 2 + 205;
+
+			for (let row = 0; row < this.totalRows; row++) {
+				for (let col = 0; col < this.totalCols; col++) {
+					const x = startX + col * cellWidth + cellWidth / 2;
+					const y = startY + row * cellHeight + cellHeight / 2;
+
+					const cell = this.add.rectangle(
+						x,
+						y,
+						cellWidth,
+						cellHeight,
+						0xff0000,
+						0.2
+					);
+					cell.setStrokeStyle(1, 0xff0000);
+					cell.setInteractive();
+
+					gridCells.push(cell);
+				}
+			}
+		};
+
+		// Initial Draw
+		drawGrid();
+
+		// Redraw on resize
+		this.scale.on("resize", drawGrid, this);
+	}
+
 	initializeScene() {
 		this.createNavbar();
 		this.createMovesBox();
 		this.createMainScene();
+		this.createInvisibleGrid();
 		this.createFooter();
 	}
 
