@@ -466,14 +466,47 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera, false);
 	}
 
+	setupAnimations() {
+		const robot = this.loadedModels.Robot.object;
+		if (!robot) {
+			console.error("Robot model not loaded");
+			return;
+		}
+
+		// Animation setup
+		this.mixer = new THREE.AnimationMixer(robot);
+		this.animationsByName = {};
+
+		robot.animations.forEach((clip) => {
+			const action = this.mixer.clipAction(clip);
+			this.animationsByName[clip.name] = action;
+		});
+	}
+
+	playAnimation(name) {
+		const action = this.animationsByName[name];
+		if (!action) {
+			console.warn("Animation not found:", name);
+			return;
+		}
+
+		// Stop all others
+		Object.values(this.animationsByName).forEach((a) => {
+			if (a !== action) a.stop();
+		});
+
+		action.reset().play();
+	}
+
 	create() {
 		this.adNetworkSetup();
 
 		this.loadedModels = this.registry.get("loadedModels");
-		console.log("Models", this.loadedModels.Robot);
 
 		this.initializeScene();
 		this.setupThreeJS();
+		this.setupAnimations();
+		this.playAnimation("RobotArmature|Robot_Dance");
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
@@ -484,6 +517,9 @@ export class Game extends Phaser.Scene {
 	update() {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
+			if (this.mixer) {
+				this.mixer.update(this.game.loop.delta / 1000);
+			}
 		}
 	}
 }
