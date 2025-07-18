@@ -91,9 +91,9 @@ export class Preloader extends Phaser.Scene {
 		const url = URL.createObjectURL(blob);
 
 		const glowMaterial = new THREE.MeshStandardMaterial({
-			color: 0xffffff, // Base color
-			emissive: 0xffd700, // Glow color (golden)
-			emissiveIntensity: 1.5, // Adjust glow strength
+			color: 0xffffff,
+			emissive: 0xffd700,
+			emissiveIntensity: 1.5,
 			roughness: 0.5,
 			metalness: 0.8,
 		});
@@ -108,43 +108,32 @@ export class Preloader extends Phaser.Scene {
 					config: modelConfig,
 				};
 
-				// Load and apply texture if available
-				if (modelConfig.texture) {
-					const textureLoader = new THREE.TextureLoader();
-					textureLoader.load(
-						modelConfig.texture,
-						(texture) => {
-							texture.colorSpace = THREE.SRGBColorSpace;
+				// Apply color to the model
+				const baseColor = 0x00ff00;
+				const glowColor = 0xffd700;
+				object.traverse((child) => {
+					if (child.isMesh) {
+						child.material = new THREE.MeshStandardMaterial({
+							color: baseColor,
+						});
 
-							// Traverse the model and apply the texture
-							object.traverse((child) => {
-								if (child.isMesh) {
-									child.material = new THREE.MeshStandardMaterial({
-										map: texture,
-									});
-									const glowColor = 0xffd700;
-								}
+						// Add glow layers
+						for (let i = 1; i <= 3; i++) {
+							const glowMaterial = new THREE.MeshBasicMaterial({
+								color: glowColor,
+								transparent: true,
+								opacity: 0.25 / i,
+								side: THREE.BackSide,
+								blending: THREE.AdditiveBlending,
 							});
 
-							for (let i = 1; i <= 3; i++) {
-								const glowMaterial = new THREE.MeshBasicMaterial({
-									color: glowColor,
-									transparent: true,
-									opacity: 0.2 / i, // Reduce opacity for outer layers
-									side: THREE.BackSide,
-									blending: THREE.AdditiveBlending,
-								});
-
-								const glowModel = child.clone();
-								glowModel.material = glowMaterial;
-								glowModel.scale.multiplyScalar(1 + i * 0.05); // Increase size for layers
-								object.add(glowModel); // Attach glow to the model
-							}
-						},
-						undefined,
-						(err) => console.error("Error loading texture:", err)
-					);
-				}
+							const glowModel = child.clone();
+							glowModel.material = glowMaterial;
+							glowModel.scale.multiplyScalar(1 + i * 0.08);
+							object.add(glowModel);
+						}
+					}
+				});
 
 				// Cleanup
 				URL.revokeObjectURL(url);

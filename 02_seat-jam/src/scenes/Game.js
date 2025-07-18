@@ -408,43 +408,46 @@ export class Game extends Phaser.Scene {
 		document.body.appendChild(this.threeCanvas);
 
 		// Camera Setup
-		const aspect = window.innerWidth / window.innerHeight;
-		const frustumHeight = 5;
-		const frustumWidth = frustumHeight * aspect;
-		this.camera = new THREE.OrthographicCamera(
-			-frustumWidth / 2,
-			frustumWidth / 2,
-			frustumHeight / 2,
-			-frustumHeight / 2,
-			0.1,
-			1000
-		);
-		this.camera.position.set(0, 0.5, 5);
-		this.camera.lookAt(0, 0.5, 0);
+		const setupCamera = () => {
+			const aspect = window.innerWidth / window.innerHeight;
+			const frustumHeight = 5;
+			const frustumWidth = frustumHeight * aspect;
+			this.camera = new THREE.OrthographicCamera(
+				-frustumWidth / 2,
+				frustumWidth / 2,
+				frustumHeight / 2,
+				-frustumHeight / 2,
+				0.1,
+				1000
+			);
+			this.camera.position.set(0, 19, 5);
+			this.camera.lookAt(0, 0.5, 0);
+			this.camera.updateProjectionMatrix();
+
+			if (this.threeRenderer) {
+				this.threeRenderer.setSize(window.innerWidth, window.innerHeight);
+			}
+		};
+
+		setupCamera();
 
 		// ThreeJS Scene
 		this.threeScene = new THREE.Scene();
 
 		// Setup Lights
-		const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 		const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-		directionalLight.position.set(0, 10, 8);
+		directionalLight.position.set(3, 10, 5);
 
-		this.threeScene.add(ambientLight);
-		this.threeScene.add(directionalLight);
+		this.threeScene.add(ambientLight, directionalLight);
 
 		// Setup Raycaster for Click Detection
 		this.raycaster = new THREE.Raycaster();
 		this.pointer = new THREE.Vector2();
 
 		this.loadedModels.Robot.object.scale.set(0.001, 0.001, 0.001);
+		this.loadedModels.Robot.object.position.set(0, 0, 0);
 		this.threeScene.add(this.loadedModels.Robot.object);
-		this.loadedModels.Robot.object.traverse((child) => {
-			if (child.isMesh) {
-				// This forces a visible color
-				child.material = new THREE.MeshNormalMaterial();
-			}
-		});
 
 		// Remove old debug box if exists
 		if (this.boundingBoxHelper) {
@@ -459,6 +462,8 @@ export class Game extends Phaser.Scene {
 		this.threeRenderer.setSize(window.innerWidth, window.innerHeight);
 		this.threeRenderer.setPixelRatio(window.devicePixelRatio);
 		this.isRenderingThree = true;
+
+		window.addEventListener("resize", setupCamera, false);
 	}
 
 	create() {
