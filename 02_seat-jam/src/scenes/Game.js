@@ -1,5 +1,6 @@
 import * as Phaser from "../phaser/phaser-3.87.0-core.js";
 import * as THREE from "three";
+import GUI from "lil-gui";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 import { Grid, PathFinder } from "./Mechanics.js";
@@ -404,7 +405,7 @@ export class Game extends Phaser.Scene {
 		}
 
 		robotModel.scale.set(0.001, 0.001, 0.001);
-		robotModel.position.set(0, 0, 0);
+		robotModel.position.set(-0.6, 3, 0);
 		this.threeScene.add(robotModel);
 	}
 
@@ -516,6 +517,21 @@ export class Game extends Phaser.Scene {
 		this.loadModels();
 		this.setupAnimations();
 		this.playAnimation("RobotArmature|Robot_Dance");
+
+		// Debug
+		const gui = new GUI();
+		const robotModel = this.loadedModels.Robot.object;
+
+		const robotFolder = gui.addFolder("Robot Position");
+		robotFolder.add(robotModel.position, "x").listen();
+		robotFolder.add(robotModel.position, "y").listen();
+		robotFolder.add(robotModel.position, "z").listen();
+		robotFolder.open();
+		const cameraFolder = gui.addFolder("Camera");
+		cameraFolder.add(this.camera.position, "x").listen();
+		cameraFolder.add(this.camera.position, "y").listen();
+		cameraFolder.add(this.camera.position, "z").listen();
+		cameraFolder.open();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
