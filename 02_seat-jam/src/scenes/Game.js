@@ -512,8 +512,8 @@ export class Game extends Phaser.Scene {
 
 		this.loadedModels = this.registry.get("loadedModels");
 
-		this.initializeScene();
 		this.setupThreeJS();
+		this.initializeScene();
 		this.loadModels();
 		this.setupAnimations();
 		this.playAnimation("RobotArmature|Robot_Dance");
