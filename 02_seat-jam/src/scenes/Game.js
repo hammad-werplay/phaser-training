@@ -396,6 +396,18 @@ export class Game extends Phaser.Scene {
 		this.createFooter();
 	}
 
+	loadModels() {
+		const robotModel = this.loadedModels.Robot.object;
+		if (!robotModel) {
+			console.error("Robot model not loaded or missing object");
+			return;
+		}
+
+		robotModel.scale.set(0.001, 0.001, 0.001);
+		robotModel.position.set(0, 0, 0);
+		this.threeScene.add(robotModel);
+	}
+
 	setupThreeJS() {
 		// Canvas for ThreeJS
 		this.threeCanvas = document.createElement("canvas");
@@ -444,10 +456,6 @@ export class Game extends Phaser.Scene {
 		// Setup Raycaster for Click Detection
 		this.raycaster = new THREE.Raycaster();
 		this.pointer = new THREE.Vector2();
-
-		this.loadedModels.Robot.object.scale.set(0.001, 0.001, 0.001);
-		this.loadedModels.Robot.object.position.set(0, 0, 0);
-		this.threeScene.add(this.loadedModels.Robot.object);
 
 		// Remove old debug box if exists
 		if (this.boundingBoxHelper) {
@@ -505,6 +513,7 @@ export class Game extends Phaser.Scene {
 
 		this.initializeScene();
 		this.setupThreeJS();
+		this.loadModels();
 		this.setupAnimations();
 		this.playAnimation("RobotArmature|Robot_Dance");
 
