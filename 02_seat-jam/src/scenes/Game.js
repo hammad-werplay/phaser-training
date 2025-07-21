@@ -8,6 +8,7 @@ export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
 
+		this.startCell;
 		this.totalRows = 6;
 		this.totalCols = 4;
 		this.seats = [
@@ -266,76 +267,52 @@ export class Game extends Phaser.Scene {
 	}
 
 	createInvisibleGrid() {
-		const CELL_WIDTH = 55;
-		const CELL_HEIGHT = 40;
-		const OFFSET_X = 105;
-		const OFFSET_Y = 205;
-		const gridCells = [];
-
 		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
-		this.selectedCell = null;
+		this.invisibleBoxes = [];
+		const boxSize = 1;
+		const bg = this.mainSceneBg;
 
 		const drawGrid = () => {
-			gridCells.forEach((cell) => cell.destroy());
-			gridCells.length = 0;
+			this.invisibleBoxes.forEach((box) => {
+				this.threeScene.remove(box);
+				box.geometry.dispose();
+				box.material.dispose();
+			});
+			this.invisibleBoxes = [];
 
-			const imgWidth = this.mainSceneBg.displayWidth;
-			const imgHeight = this.mainSceneBg.displayHeight;
-
-			const rows = Math.floor(imgHeight / CELL_HEIGHT);
-			const cols = Math.floor(imgWidth / CELL_WIDTH);
-
-			const startX = this.mainSceneBg.x - imgWidth / 2 + OFFSET_X;
-			const startY = this.mainSceneBg.y - imgHeight / 2 + OFFSET_Y;
+			const startingPositions = {
+				x: -0.6,
+				y: 0.0,
+				z: -0.84,
+			};
 
 			for (let row = 0; row < this.totalRows; row++) {
 				for (let col = 0; col < this.totalCols; col++) {
-					const logicCell = this.grid.getCell(row, col);
+					const logicBox = this.grid.getCell(row, col);
 
-					const x = startX + col * CELL_WIDTH + CELL_WIDTH / 2;
-					const y = startY + row * CELL_HEIGHT + CELL_HEIGHT / 2;
-
-					const cellRect = this.add.rectangle(x, y, CELL_WIDTH, CELL_HEIGHT);
-					cellRect.setInteractive();
-					cellRect.setStrokeStyle(1, 0xff0000);
-					cellRect.setFillStyle(
-						logicCell.type === "seat" ? 0x00ff00 : 0x000000,
-						0.2
-					);
-
-					logicCell.visual = cellRect;
-
-					cellRect.on("pointerdown", () => {
-						if (!this.selectedCell) {
-							this.selectedCell = logicCell;
-							this.selectedCell.visual.setFillStyle(0x00ff00, 0.5);
-							return;
-						}
-
-						if (this.selectedCell.key() === logicCell.key()) {
-							this.selectedCell.visual.setFillStyle(0x000000, 0.2);
-							this.selectedCell = null;
-							return;
-						}
-
-						const start = this.selectedCell;
-						const end = logicCell;
-
-						const path = this.pathFinder.findShortestPath(start, end);
-
-						if (!path) {
-							console.error("No path found");
-							this.selectedCell = null;
-							return;
-						}
-
-						this.movePlayerAlongPath(path);
-
-						this.selectedCell = null;
+					// Create a transparent box (Mesh)
+					const geometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+					const material = new THREE.MeshBasicMaterial({
+						color: 0xff0000,
+						transparent: true,
+						opacity: 0.2,
 					});
 
-					gridCells.push(cellRect);
+					const box = new THREE.Mesh(geometry, material);
+					box.position.set(
+						startingPositions.x + col * 0.41,
+						0.2,
+						startingPositions.z + row * 0.31
+					);
+					box.scale.set(0.33, 0.025, 0.24);
+					box.userData = { row, col };
+
+					logicBox.visual = box;
+					logicBox.isBlocked = false;
+
+					this.threeScene.add(box);
+					this.invisibleBoxes.push(box);
 				}
 			}
 		};
@@ -345,6 +322,57 @@ export class Game extends Phaser.Scene {
 
 		// Redraw on resize
 		this.scale.on("resize", drawGrid, this);
+
+		// Click on invisible boxes
+		this.mouse = new THREE.Vector2();
+		window.addEventListener("pointerdown", (event) => {
+			console.log("Invisible box clicked", this.invisibleBoxes);
+			const rect = this.threeCanvas.getBoundingClientRect();
+
+			this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+			this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+			this.raycaster.setFromCamera(this.mouse, this.camera);
+
+			const intersects = this.raycaster.intersectObjects(this.invisibleBoxes);
+
+			if (intersects.length > 0) {
+				const clickedBox = intersects[0].object;
+				if (!this.startCell) {
+					this.startCell = this.grid.getCell(
+						clickedBox.userData.row,
+						clickedBox.userData.col
+					);
+					this.startCell.visual.material.color.set(0x00ff00);
+					return;
+				}
+
+				const endCell = this.grid.getCell(
+					clickedBox.userData.row,
+					clickedBox.userData.col
+				);
+
+				if (this.startCell.key() === endCell.key()) {
+					this.startCell.visual.material.color.set(0xff0000);
+					this.startCell = null;
+					return;
+				}
+
+				const start = this.startCell;
+				const end = endCell;
+
+				const path = this.pathFinder.findShortestPath(start, end);
+
+				if (!path) {
+					console.error("No path found");
+					this.startCell = null;
+					return;
+				}
+
+				this.movePlayerAlongPath(path);
+				this.startCell = null;
+			}
+		});
 	}
 
 	movePlayerAlongPath(path) {
@@ -353,7 +381,11 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
-		console.log("Path:", path);
+		const robotModel = this.loadedModels.Robot.object;
+		if (!robotModel) {
+			console.error("Robot model not loaded or missing object");
+			return;
+		}
 
 		let index = 0;
 		let previousCell = null;
@@ -365,19 +397,36 @@ export class Game extends Phaser.Scene {
 			}
 
 			const cell = path[index];
+			const nextCell = path.length > index + 1 ? path[index + 1] : null;
+
+			const targetPosition = new THREE.Vector3(
+				cell.visual.position.x,
+				cell.visual.position.y + 0.1,
+				cell.visual.position.z
+			);
+			robotModel.position.copy(targetPosition);
+			this.playAnimation("RobotArmature|Robot_Walking");
+
+			if (nextCell) {
+				const nextPosition = new THREE.Vector3(
+					nextCell.visual.position.x,
+					nextCell.visual.position.y + 0.1,
+					nextCell.visual.position.z
+				);
+				robotModel.lookAt(nextPosition);
+			}
 
 			if (previousCell && previousCell.visual) {
-				console.log("Prev Cell:", previousCell);
-				previousCell.visual.setFillStyle(0x000000, 0.2);
+				previousCell.visual.material.color.set(0xff0000);
 			}
 
 			if (cell.visual) {
-				console.log("Curr Cell:", cell);
-				cell.visual.setFillStyle(0x00ff00, 0.5);
+				cell.visual.material.color.set(0x00ff00);
 			}
 
 			if (index === path.length - 1) {
 				clearInterval(interval);
+				this.playAnimation("RobotArmature|Robot_Idle");
 
 				setTimeout(() => {
 					cell.isBlocked = true;
@@ -518,6 +567,7 @@ export class Game extends Phaser.Scene {
 		this.setupAnimations();
 		this.playAnimation("RobotArmature|Robot_Dance");
 
+		console.log("Grid:", this.grid);
 		// Debug
 		const gui = new GUI();
 		const robotModel = this.loadedModels.Robot.object;
