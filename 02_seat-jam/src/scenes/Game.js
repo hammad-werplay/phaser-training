@@ -4,6 +4,7 @@ import GUI from "lil-gui";
 
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 import { Grid, PathFinder } from "./Mechanics.js";
+import { Robot } from "./Robot.js";
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
@@ -296,7 +297,7 @@ export class Game extends Phaser.Scene {
 					const material = new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
-						opacity: 0,
+						opacity: 0.1,
 					});
 
 					const box = new THREE.Mesh(geometry, material);
@@ -381,7 +382,7 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
-		const robotModel = this.loadedModels.Robot.object;
+		const robotModel = path[0].robot;
 		if (!robotModel) {
 			console.error("Robot model not loaded or missing object");
 			return;
@@ -405,7 +406,7 @@ export class Game extends Phaser.Scene {
 				cell.visual.position.z
 			);
 			robotModel.position.copy(targetPosition);
-			this.playAnimation("RobotArmature|Robot_Walking");
+			this.robotModel1.playAnimation("RobotArmature|Robot_Walking");
 
 			if (nextCell) {
 				const nextPosition = new THREE.Vector3(
@@ -426,11 +427,7 @@ export class Game extends Phaser.Scene {
 
 			if (index === path.length - 1) {
 				clearInterval(interval);
-				this.playAnimation("RobotArmature|Robot_Idle");
-
-				setTimeout(() => {
-					cell.isBlocked = true;
-				}, 500);
+				this.robotModel1.playAnimation("RobotArmature|Robot_Idle");
 			}
 
 			previousCell = cell;
@@ -447,19 +444,18 @@ export class Game extends Phaser.Scene {
 	}
 
 	loadModels() {
-		const robotModel = this.loadedModels.Robot.object;
-		if (!robotModel) {
+		const robotModelRef = this.loadedModels.Robot.object;
+		if (!robotModelRef) {
 			console.error("Robot model not loaded or missing object");
 			return;
 		}
 
 		const cell = this.grid.getCell(0, 0);
-
-		robotModel.scale.set(0.001, 0.001, 0.001);
-		robotModel.position.copy(cell.visual.position);
-		cell.robot = robotModel;
-
-		this.threeScene.add(robotModel);
+		const positions = cell.visual.position.clone();
+		this.robotModel1 = new Robot(robotModelRef, positions);
+		this.robotModel1.playAnimation("RobotArmature|Robot_Idle");
+		cell.robot = this.robotModel1.getModel();
+		this.threeScene.add(this.robotModel1.getModel());
 	}
 
 	setupThreeJS() {
@@ -528,38 +524,6 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera, false);
 	}
 
-	setupAnimations() {
-		const robot = this.loadedModels.Robot.object;
-		if (!robot) {
-			console.error("Robot model not loaded");
-			return;
-		}
-
-		// Animation setup
-		this.mixer = new THREE.AnimationMixer(robot);
-		this.animationsByName = {};
-
-		robot.animations.forEach((clip) => {
-			const action = this.mixer.clipAction(clip);
-			this.animationsByName[clip.name] = action;
-		});
-	}
-
-	playAnimation(name) {
-		const action = this.animationsByName[name];
-		if (!action) {
-			console.warn("Animation not found:", name);
-			return;
-		}
-
-		// Stop all others
-		Object.values(this.animationsByName).forEach((a) => {
-			if (a !== action) a.stop();
-		});
-
-		action.reset().play();
-	}
-
 	create() {
 		this.adNetworkSetup();
 
@@ -568,10 +532,7 @@ export class Game extends Phaser.Scene {
 		this.setupThreeJS();
 		this.initializeScene();
 		this.loadModels();
-		this.setupAnimations();
-		this.playAnimation("RobotArmature|Robot_Dance");
 
-		console.log("Grid:", this.grid);
 		// Debug
 		const gui = new GUI();
 		const robotModel = this.loadedModels.Robot.object;
@@ -596,8 +557,8 @@ export class Game extends Phaser.Scene {
 	update() {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
-			if (this.mixer) {
-				this.mixer.update(this.game.loop.delta / 1000);
+			if (this.robotModel1.mixer) {
+				this.robotModel1.mixer.update(this.game.loop.delta / 1000);
 			}
 		}
 	}

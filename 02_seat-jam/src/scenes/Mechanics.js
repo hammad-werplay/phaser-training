@@ -3,7 +3,7 @@ class Cell {
 		this.row = row;
 		this.col = col;
 		this.type = type;
-		this.isBlocked = false;
+		this.isBlocked = this.robot ? false : true;
 		this.visual = null;
 		this.robot = null;
 	}
