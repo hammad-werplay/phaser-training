@@ -5,6 +5,7 @@ class Cell {
 		this.type = type;
 		this.isBlocked = false;
 		this.visual = null;
+		this.robot = null;
 	}
 
 	/**

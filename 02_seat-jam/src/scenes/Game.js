@@ -296,7 +296,7 @@ export class Game extends Phaser.Scene {
 					const material = new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
-						opacity: 0.2,
+						opacity: 0,
 					});
 
 					const box = new THREE.Mesh(geometry, material);
@@ -326,7 +326,6 @@ export class Game extends Phaser.Scene {
 		// Click on invisible boxes
 		this.mouse = new THREE.Vector2();
 		window.addEventListener("pointerdown", (event) => {
-			console.log("Invisible box clicked", this.invisibleBoxes);
 			const rect = this.threeCanvas.getBoundingClientRect();
 
 			this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -337,23 +336,22 @@ export class Game extends Phaser.Scene {
 			const intersects = this.raycaster.intersectObjects(this.invisibleBoxes);
 
 			if (intersects.length > 0) {
-				const clickedBox = intersects[0].object;
-				if (!this.startCell) {
-					this.startCell = this.grid.getCell(
-						clickedBox.userData.row,
-						clickedBox.userData.col
-					);
-					this.startCell.visual.material.color.set(0x00ff00);
+				const { row, col } = intersects[0].object.userData;
+				const clickedBox = this.grid.getCell(row, col);
+
+				if (!clickedBox.robot && !this.startCell) {
 					return;
 				}
 
-				const endCell = this.grid.getCell(
-					clickedBox.userData.row,
-					clickedBox.userData.col
-				);
+				if (!this.startCell) {
+					this.startCell = clickedBox;
+					this.playAnimation("RobotArmature|Robot_Yes");
+					return;
+				}
+
+				const endCell = clickedBox;
 
 				if (this.startCell.key() === endCell.key()) {
-					this.startCell.visual.material.color.set(0xff0000);
 					this.startCell = null;
 					return;
 				}
@@ -371,6 +369,8 @@ export class Game extends Phaser.Scene {
 
 				this.movePlayerAlongPath(path);
 				this.startCell = null;
+				end.robot = start.robot;
+				start.robot = null;
 			}
 		});
 	}
@@ -453,8 +453,12 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
+		const cell = this.grid.getCell(0, 0);
+
 		robotModel.scale.set(0.001, 0.001, 0.001);
-		robotModel.position.set(-0.6, 3, 0);
+		robotModel.position.copy(cell.visual.position);
+		cell.robot = robotModel;
+
 		this.threeScene.add(robotModel);
 	}
 
