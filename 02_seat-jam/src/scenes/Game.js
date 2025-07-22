@@ -580,6 +580,8 @@ export class Game extends Phaser.Scene {
 				if (robot.mixer) {
 					robot.mixer.update(this.game.loop.delta / 1000);
 				}
+
+				robot.updateLabelPosition(this.camera);
 			});
 
 			if (this.movesLeft <= 0) {
