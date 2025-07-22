@@ -474,14 +474,39 @@ export class Game extends Phaser.Scene {
 		this.robotModel1.attachTo(cell1, this.threeScene);
 
 		// Robot model 2
-		const cell2 = this.grid.getCell(1, 0);
+		const cell2 = this.grid.getCell(2, 0);
 		this.robotModel2 = new Robot(robotModelRef);
 		this.robotModel2.attachTo(cell2, this.threeScene);
 
 		// Robot model 3
-		const cell3 = this.grid.getCell(2, 2);
+		const cell3 = this.grid.getCell(3, 0);
 		this.robotModel3 = new Robot(robotModelRef);
 		this.robotModel3.attachTo(cell3, this.threeScene);
+
+		// Robot model 4
+		const cell4 = this.grid.getCell(5, 0);
+		this.robotModel4 = new Robot(robotModelRef);
+		this.robotModel4.attachTo(cell4, this.threeScene);
+
+		// Robot model 5
+		const cell5 = this.grid.getCell(4, 1);
+		this.robotModel5 = new Robot(robotModelRef);
+		this.robotModel5.attachTo(cell5, this.threeScene);
+
+		// Robot model 6
+		const cell6 = this.grid.getCell(4, 2);
+		this.robotModel6 = new Robot(robotModelRef);
+		this.robotModel6.attachTo(cell6, this.threeScene);
+
+		// Robot model 7
+		const cell7 = this.grid.getCell(3, 3);
+		this.robotModel7 = new Robot(robotModelRef);
+		this.robotModel7.attachTo(cell7, this.threeScene);
+
+		// Robot model 8
+		const cell8 = this.grid.getCell(1, 2);
+		this.robotModel8 = new Robot(robotModelRef);
+		this.robotModel8.attachTo(cell8, this.threeScene);
 	}
 
 	setupThreeJS() {
