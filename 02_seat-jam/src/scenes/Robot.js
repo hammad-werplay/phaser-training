@@ -34,14 +34,28 @@ export class Robot {
 	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle") {
 		this.robot.position.copy(cell.visual.position);
 
-		cell.robot = this.robot;
-		cell.robotObject = this;
-
-		scene.add(this.robot);
-
 		if (animationName) {
 			this.playAnimation(animationName);
 		}
+
+		cell.robotObject = this;
+		cell.robot = this.robot;
+
+		if (cell.type === "seat") {
+			this.playAnimation("RobotArmature|Robot_Sitting");
+		}
+
+		scene.add(this.robot);
+	}
+
+	lookDown(cell) {
+		if (!cell || !cell.visual) {
+			console.warn("Cannot look down, invalid cell or visual");
+			return;
+		}
+
+		const targetPosition = cell.visual.position.clone();
+		this.robot.lookAt(targetPosition);
 	}
 
 	getModel() {

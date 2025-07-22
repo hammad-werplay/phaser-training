@@ -374,6 +374,13 @@ export class Game extends Phaser.Scene {
 					end.robot = start.robot;
 					end.robotObject = start.robotObject;
 					start.robotObject.playAnimation();
+
+					if (end.type === "seat") {
+						const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
+						end.robotObject.lookDown(cellToLookDown);
+						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
+					}
+
 					start.robot = null;
 					start.robotObject = null;
 				});
@@ -556,10 +563,10 @@ export class Game extends Phaser.Scene {
 		const gui = new GUI();
 		const robotModel = this.loadedModels.Robot.object;
 
-		const robotFolder = gui.addFolder("Robot Position");
-		robotFolder.add(robotModel.position, "x").listen();
-		robotFolder.add(robotModel.position, "y").listen();
-		robotFolder.add(robotModel.position, "z").listen();
+		const robotFolder = gui.addFolder("Robot 3 Position");
+		robotFolder.add(this.robotModel3.robot.position, "x").listen();
+		robotFolder.add(this.robotModel3.robot.position, "y").listen();
+		robotFolder.add(this.robotModel3.robot.position, "z").listen();
 		robotFolder.open();
 		const cameraFolder = gui.addFolder("Camera");
 		cameraFolder.add(this.camera.position, "x").listen();
