@@ -283,10 +283,16 @@ export class Game extends Phaser.Scene {
 			});
 			this.invisibleBoxes = [];
 
+			const cellWidth = 0.41;
+			const cellHeight = 0.31;
+
+			const gridWidth = this.totalCols * cellWidth - 0.43;
+			const gridHeight = this.totalRows * cellHeight - 0.28;
+
 			const startingPositions = {
-				x: -0.6,
-				y: 0.0,
-				z: -0.79,
+				x: -gridWidth / 2,
+				y: 0,
+				z: -gridHeight / 2,
 			};
 
 			for (let row = 0; row < this.totalRows; row++) {
@@ -303,11 +309,11 @@ export class Game extends Phaser.Scene {
 
 					const box = new THREE.Mesh(geometry, material);
 					box.position.set(
-						startingPositions.x + col * 0.41,
+						startingPositions.x + col * cellWidth,
 						0,
-						startingPositions.z + row * 0.31
+						startingPositions.z + row * cellHeight
 					);
-					box.scale.set(0.34, 0.025, 0.28);
+					box.scale.set(0.39, 0.025, 0.29);
 					box.userData = { row, col };
 
 					logicBox.visual = box;
@@ -522,6 +528,8 @@ export class Game extends Phaser.Scene {
 			const aspect = window.innerWidth / window.innerHeight;
 			const frustumHeight = 5;
 			const frustumWidth = frustumHeight * aspect;
+			this.frustumWidth = frustumWidth;
+			this.frustumHeight = frustumHeight;
 			this.camera = new THREE.OrthographicCamera(
 				-frustumWidth / 2,
 				frustumWidth / 2,
@@ -569,7 +577,7 @@ export class Game extends Phaser.Scene {
 		this.threeRenderer.setPixelRatio(window.devicePixelRatio);
 		this.isRenderingThree = true;
 
-		window.addEventListener("resize", setupCamera, false);
+		window.addEventListener("resize", setupCamera);
 	}
 
 	create() {

@@ -16,7 +16,7 @@ class Cell {
 
 	set robot(value) {
 		this._robot = value;
-		this.isBlocked = !!value;
+		this.isBlocked = value ? true : false;
 	}
 
 	verifyCorrectSeatLabel() {
