@@ -468,55 +468,23 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
-		this.robots = [];
+		const robotPositions = [
+			[0, 0],
+			[2, 0],
+			[3, 0],
+			[5, 0],
+			[4, 1],
+			[4, 2],
+			[3, 3],
+			[1, 2],
+		];
 
-		// Robot model 1
-		const cell1 = this.grid.getCell(0, 0);
-		const robotModel1 = new Robot(robotModelRef);
-		robotModel1.attachTo(cell1, this.threeScene);
-		this.robots.push(robotModel1);
-
-		// Robot model 2
-		const cell2 = this.grid.getCell(2, 0);
-		const robotModel2 = new Robot(robotModelRef);
-		robotModel2.attachTo(cell2, this.threeScene);
-		this.robots.push(robotModel2);
-
-		// Robot model 3
-		const cell3 = this.grid.getCell(3, 0);
-		const robotModel3 = new Robot(robotModelRef);
-		robotModel3.attachTo(cell3, this.threeScene);
-		this.robots.push(robotModel3);
-
-		// Robot model 4
-		const cell4 = this.grid.getCell(5, 0);
-		const robotModel4 = new Robot(robotModelRef);
-		robotModel4.attachTo(cell4, this.threeScene);
-		this.robots.push(robotModel4);
-
-		// Robot model 5
-		const cell5 = this.grid.getCell(4, 1);
-		const robotModel5 = new Robot(robotModelRef);
-		robotModel5.attachTo(cell5, this.threeScene);
-		this.robots.push(robotModel5);
-
-		// Robot model 6
-		const cell6 = this.grid.getCell(4, 2);
-		const robotModel6 = new Robot(robotModelRef);
-		robotModel6.attachTo(cell6, this.threeScene);
-		this.robots.push(robotModel6);
-
-		// Robot model 7
-		const cell7 = this.grid.getCell(3, 3);
-		const robotModel7 = new Robot(robotModelRef);
-		robotModel7.attachTo(cell7, this.threeScene);
-		this.robots.push(robotModel7);
-
-		// Robot model 8
-		const cell8 = this.grid.getCell(1, 2);
-		const robotModel8 = new Robot(robotModelRef);
-		robotModel8.attachTo(cell8, this.threeScene);
-		this.robots.push(robotModel8);
+		this.robots = robotPositions.map(([row, col]) => {
+			const cell = this.grid.getCell(row, col);
+			const robotModel = new Robot(robotModelRef);
+			robotModel.attachTo(cell, this.threeScene);
+			return robotModel;
+		});
 	}
 
 	setupThreeJS() {
