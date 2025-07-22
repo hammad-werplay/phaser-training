@@ -13,16 +13,16 @@ export class Game extends Phaser.Scene {
 		this.startCell;
 		this.totalRows = 6;
 		this.totalCols = 4;
-		this.seats = [
-			[1, 1],
-			[1, 2],
-			[2, 1],
-			[2, 2],
-			[3, 1],
-			[3, 2],
-			[4, 1],
-			[4, 2],
-		];
+		this.seats = {
+			A1: [1, 1],
+			A2: [2, 1],
+			A3: [3, 1],
+			A4: [4, 1],
+			B1: [1, 2],
+			B2: [2, 2],
+			B3: [3, 2],
+			B4: [4, 2],
+		};
 	}
 
 	init() {
@@ -269,7 +269,11 @@ export class Game extends Phaser.Scene {
 	}
 
 	createInvisibleGrid() {
-		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
+		this.grid = new Grid(
+			this.totalRows,
+			this.totalCols,
+			Object.values(this.seats)
+		);
 		this.pathFinder = new PathFinder(this.grid);
 		this.invisibleBoxes = [];
 		const boxSize = 1;
@@ -483,10 +487,16 @@ export class Game extends Phaser.Scene {
 			[1, 2],
 		];
 
+		const availableSeats = Object.keys(this.seats);
+		const shuffledSeats = availableSeats.sort(() => Math.random() - 0.5);
+
 		this.robots = robotPositions.map(([row, col]) => {
 			const cell = this.grid.getCell(row, col);
 			const robotModel = new Robot(robotModelRef);
-			robotModel.attachTo(cell, this.threeScene);
+
+			const seatName = shuffledSeats.pop() || "A1";
+
+			robotModel.attachTo(cell, this.threeScene, undefined, seatName);
 			return robotModel;
 		});
 	}

@@ -12,7 +12,6 @@ export class Robot {
 			const action = this.mixer.clipAction(clip);
 			this.animationsByName[clip.name] = action;
 		});
-
 		this.nameLabel;
 	}
 
@@ -31,7 +30,7 @@ export class Robot {
 		action.reset().play();
 	}
 
-	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle") {
+	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle", labelText) {
 		this.robot.position.copy(cell.visual.position);
 
 		if (animationName) {
@@ -47,7 +46,7 @@ export class Robot {
 
 		scene.add(this.robot);
 
-		this.nameLabel = this.createNameLabel();
+		this.nameLabel = this.createNameLabel(labelText);
 		scene.add(this.nameLabel);
 	}
 
