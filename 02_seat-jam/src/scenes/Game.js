@@ -115,7 +115,7 @@ export class Game extends Phaser.Scene {
 
 			// Footer scaling
 			const scaleX = canvasWidth / this.footerImage.width;
-			const scaleY = canvasWidth < 650 ? scaleX * 2.1 : scaleX;
+			const scaleY = scaleX;
 			this.footerImage.setScale(scaleX, scaleY);
 			this.footerImage.setPosition(canvasWidth / 2, canvasHeight);
 
@@ -286,7 +286,7 @@ export class Game extends Phaser.Scene {
 			const startingPositions = {
 				x: -0.6,
 				y: 0.0,
-				z: -0.84,
+				z: -0.79,
 			};
 
 			for (let row = 0; row < this.totalRows; row++) {
@@ -298,16 +298,16 @@ export class Game extends Phaser.Scene {
 					const material = new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
-						opacity: 0.1,
+						opacity: 0,
 					});
 
 					const box = new THREE.Mesh(geometry, material);
 					box.position.set(
 						startingPositions.x + col * 0.41,
-						0.2,
+						0,
 						startingPositions.z + row * 0.31
 					);
-					box.scale.set(0.33, 0.025, 0.24);
+					box.scale.set(0.34, 0.025, 0.28);
 					box.userData = { row, col };
 
 					logicBox.visual = box;
@@ -565,23 +565,6 @@ export class Game extends Phaser.Scene {
 		this.setupThreeJS();
 		this.initializeScene();
 		this.loadModels();
-
-		// Debug
-		const gui = new GUI();
-		const robotModel = this.loadedModels.Robot.object;
-
-		const robotFolder = gui.addFolder("Robot 3 Position");
-		robotFolder.add(this.robots[2].robot.position, "x").listen();
-		robotFolder.add(this.robots[2].robot.position, "y").listen();
-		robotFolder.add(this.robots[2].robot.position, "z").listen();
-		robotFolder.open();
-		const cameraFolder = gui.addFolder("Camera");
-		cameraFolder.add(this.camera.position, "x").listen();
-		cameraFolder.add(this.camera.position, "y").listen();
-		cameraFolder.add(this.camera.position, "z").listen();
-		cameraFolder.open();
-
-		console.log("Grid:", this.grid.cells);
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");

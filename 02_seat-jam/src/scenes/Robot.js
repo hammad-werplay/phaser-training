@@ -21,8 +21,6 @@ export class Robot {
 			return;
 		}
 
-		console.log(`Playing animation: ${name}`);
-
 		// Stop all other animations on this robot
 		Object.values(this.animationsByName).forEach((a) => {
 			if (a !== action) a.stop();
