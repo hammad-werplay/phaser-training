@@ -9,6 +9,7 @@ export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
 
+		this.movesLeft = 7;
 		this.startCell;
 		this.totalRows = 6;
 		this.totalCols = 4;
@@ -188,7 +189,7 @@ export class Game extends Phaser.Scene {
 		// Moves box and text
 		this.movesBox = this.add.image(0, 0, "movesBox").setOrigin(1, 0);
 		this.moveCountText = this.add
-			.text(0, 0, "7", {
+			.text(0, 0, this.movesLeft, {
 				fontFamily: "MADE Tommy Soft",
 				fontSize: "64px",
 				color: "#ffffff",
@@ -383,6 +384,9 @@ export class Game extends Phaser.Scene {
 
 					start.robot = null;
 					start.robotObject = null;
+
+					this.movesLeft--;
+					this.moveCountText.setText(this.movesLeft.toString());
 				});
 			}
 		});
@@ -594,6 +598,11 @@ export class Game extends Phaser.Scene {
 					robot.mixer.update(this.game.loop.delta / 1000);
 				}
 			});
+
+			if (this.movesLeft <= 0) {
+				// Game Over Logic
+				alert("Game Over! No moves left.");
+			}
 		}
 	}
 }
