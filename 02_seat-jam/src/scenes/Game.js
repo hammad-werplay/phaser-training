@@ -556,6 +556,8 @@ export class Game extends Phaser.Scene {
 		cameraFolder.add(this.camera.position, "z").listen();
 		cameraFolder.open();
 
+		console.log("Grid:", this.grid.cells);
+
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
 			onCtaPressed();

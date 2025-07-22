@@ -3,9 +3,18 @@ class Cell {
 		this.row = row;
 		this.col = col;
 		this.type = type;
-		this.isBlocked = this.robot ? false : true;
+		this.isBlocked = false;
 		this.visual = null;
-		this.robot = null;
+		this._robot = null;
+	}
+
+	get robot() {
+		return this._robot;
+	}
+
+	set robot(value) {
+		this._robot = value;
+		this.isBlocked = value ? true : false;
 	}
 
 	/**
