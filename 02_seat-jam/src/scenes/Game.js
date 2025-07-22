@@ -468,45 +468,55 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
+		this.robots = [];
+
 		// Robot model 1
 		const cell1 = this.grid.getCell(0, 0);
-		this.robotModel1 = new Robot(robotModelRef);
-		this.robotModel1.attachTo(cell1, this.threeScene);
+		const robotModel1 = new Robot(robotModelRef);
+		robotModel1.attachTo(cell1, this.threeScene);
+		this.robots.push(robotModel1);
 
 		// Robot model 2
 		const cell2 = this.grid.getCell(2, 0);
-		this.robotModel2 = new Robot(robotModelRef);
-		this.robotModel2.attachTo(cell2, this.threeScene);
+		const robotModel2 = new Robot(robotModelRef);
+		robotModel2.attachTo(cell2, this.threeScene);
+		this.robots.push(robotModel2);
 
 		// Robot model 3
 		const cell3 = this.grid.getCell(3, 0);
-		this.robotModel3 = new Robot(robotModelRef);
-		this.robotModel3.attachTo(cell3, this.threeScene);
+		const robotModel3 = new Robot(robotModelRef);
+		robotModel3.attachTo(cell3, this.threeScene);
+		this.robots.push(robotModel3);
 
 		// Robot model 4
 		const cell4 = this.grid.getCell(5, 0);
-		this.robotModel4 = new Robot(robotModelRef);
-		this.robotModel4.attachTo(cell4, this.threeScene);
+		const robotModel4 = new Robot(robotModelRef);
+		robotModel4.attachTo(cell4, this.threeScene);
+		this.robots.push(robotModel4);
 
 		// Robot model 5
 		const cell5 = this.grid.getCell(4, 1);
-		this.robotModel5 = new Robot(robotModelRef);
-		this.robotModel5.attachTo(cell5, this.threeScene);
+		const robotModel5 = new Robot(robotModelRef);
+		robotModel5.attachTo(cell5, this.threeScene);
+		this.robots.push(robotModel5);
 
 		// Robot model 6
 		const cell6 = this.grid.getCell(4, 2);
-		this.robotModel6 = new Robot(robotModelRef);
-		this.robotModel6.attachTo(cell6, this.threeScene);
+		const robotModel6 = new Robot(robotModelRef);
+		robotModel6.attachTo(cell6, this.threeScene);
+		this.robots.push(robotModel6);
 
 		// Robot model 7
 		const cell7 = this.grid.getCell(3, 3);
-		this.robotModel7 = new Robot(robotModelRef);
-		this.robotModel7.attachTo(cell7, this.threeScene);
+		const robotModel7 = new Robot(robotModelRef);
+		robotModel7.attachTo(cell7, this.threeScene);
+		this.robots.push(robotModel7);
 
 		// Robot model 8
 		const cell8 = this.grid.getCell(1, 2);
-		this.robotModel8 = new Robot(robotModelRef);
-		this.robotModel8.attachTo(cell8, this.threeScene);
+		const robotModel8 = new Robot(robotModelRef);
+		robotModel8.attachTo(cell8, this.threeScene);
+		this.robots.push(robotModel8);
 	}
 
 	setupThreeJS() {
@@ -589,9 +599,9 @@ export class Game extends Phaser.Scene {
 		const robotModel = this.loadedModels.Robot.object;
 
 		const robotFolder = gui.addFolder("Robot 3 Position");
-		robotFolder.add(this.robotModel3.robot.position, "x").listen();
-		robotFolder.add(this.robotModel3.robot.position, "y").listen();
-		robotFolder.add(this.robotModel3.robot.position, "z").listen();
+		robotFolder.add(this.robots[2].robot.position, "x").listen();
+		robotFolder.add(this.robots[2].robot.position, "y").listen();
+		robotFolder.add(this.robots[2].robot.position, "z").listen();
 		robotFolder.open();
 		const cameraFolder = gui.addFolder("Camera");
 		cameraFolder.add(this.camera.position, "x").listen();
@@ -610,15 +620,12 @@ export class Game extends Phaser.Scene {
 	update() {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
-			if (this.robotModel1.mixer) {
-				this.robotModel1.mixer.update(this.game.loop.delta / 1000);
-			}
-			if (this.robotModel2.mixer) {
-				this.robotModel2.mixer.update(this.game.loop.delta / 1000);
-			}
-			if (this.robotModel3.mixer) {
-				this.robotModel3.mixer.update(this.game.loop.delta / 1000);
-			}
+
+			this.robots.forEach((robot) => {
+				if (robot.mixer) {
+					robot.mixer.update(this.game.loop.delta / 1000);
+				}
+			});
 		}
 	}
 }
