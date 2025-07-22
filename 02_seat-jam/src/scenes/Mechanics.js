@@ -14,7 +14,11 @@ class Cell {
 
 	set robot(value) {
 		this._robot = value;
-		this.isBlocked = value ? true : false;
+		this.isBlocked = !!value;
+
+		if (this.type === "seat" && this.robotObject) {
+			this.robotObject.playAnimation("RobotArmature|Robot_Sitting");
+		}
 	}
 
 	/**
