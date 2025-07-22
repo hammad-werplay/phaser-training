@@ -1,10 +1,9 @@
 import * as THREE from "three";
 
 export class Robot {
-	constructor(robotModelRef, positions) {
+	constructor(robotModelRef) {
 		this.robot = robotModelRef.clone();
 		this.robot.scale.set(0.001, 0.001, 0.001);
-		this.robot.position.copy(positions);
 
 		this.mixer = new THREE.AnimationMixer(this.robot);
 		this.animationsByName = {};
@@ -27,8 +26,20 @@ export class Robot {
 			if (a !== action) a.stop();
 		});
 
-		console.log(`Playing animation: ${name}`);
 		action.reset().play();
+	}
+
+	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle") {
+		this.robot.position.copy(cell.visual.position);
+
+		cell.robot = this.robot;
+		cell.robotObject = this;
+
+		scene.add(this.robot);
+
+		if (animationName) {
+			this.playAnimation(animationName);
+		}
 	}
 
 	getModel() {

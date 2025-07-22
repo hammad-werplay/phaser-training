@@ -450,12 +450,20 @@ export class Game extends Phaser.Scene {
 			return;
 		}
 
-		const cell = this.grid.getCell(0, 0);
-		const positions = cell.visual.position.clone();
-		this.robotModel1 = new Robot(robotModelRef, positions);
-		this.robotModel1.playAnimation("RobotArmature|Robot_Idle");
-		cell.robot = this.robotModel1.getModel();
-		this.threeScene.add(this.robotModel1.getModel());
+		// Robot model 1
+		const cell1 = this.grid.getCell(0, 0);
+		this.robotModel1 = new Robot(robotModelRef);
+		this.robotModel1.attachTo(cell1, this.threeScene);
+
+		// Robot model 2
+		const cell2 = this.grid.getCell(1, 0);
+		this.robotModel2 = new Robot(robotModelRef);
+		this.robotModel2.attachTo(cell2, this.threeScene);
+
+		// Robot model 3
+		const cell3 = this.grid.getCell(2, 2);
+		this.robotModel3 = new Robot(robotModelRef);
+		this.robotModel3.attachTo(cell3, this.threeScene);
 	}
 
 	setupThreeJS() {
@@ -559,6 +567,12 @@ export class Game extends Phaser.Scene {
 			this.threeRenderer.render(this.threeScene, this.camera);
 			if (this.robotModel1.mixer) {
 				this.robotModel1.mixer.update(this.game.loop.delta / 1000);
+			}
+			if (this.robotModel2.mixer) {
+				this.robotModel2.mixer.update(this.game.loop.delta / 1000);
+			}
+			if (this.robotModel3.mixer) {
+				this.robotModel3.mixer.update(this.game.loop.delta / 1000);
 			}
 		}
 	}
