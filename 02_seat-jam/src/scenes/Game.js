@@ -346,7 +346,7 @@ export class Game extends Phaser.Scene {
 
 				if (!this.startCell) {
 					this.startCell = clickedBox;
-					this.playAnimation("RobotArmature|Robot_Yes");
+					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
 					return;
 				}
 
@@ -364,19 +364,24 @@ export class Game extends Phaser.Scene {
 
 				if (!path) {
 					console.error("No path found");
+					this.startCell.robotObject.playAnimation();
 					this.startCell = null;
 					return;
 				}
 
-				this.movePlayerAlongPath(path);
-				this.startCell = null;
-				end.robot = start.robot;
-				start.robot = null;
+				this.movePlayerAlongPath(path, () => {
+					this.startCell = null;
+					end.robot = start.robot;
+					end.robotObject = start.robotObject;
+					start.robotObject.playAnimation();
+					start.robot = null;
+					start.robotObject = null;
+				});
 			}
 		});
 	}
 
-	movePlayerAlongPath(path) {
+	movePlayerAlongPath(path, onComplete) {
 		if (!path || path.length === 0) {
 			console.error("No path found");
 			return;
@@ -400,13 +405,16 @@ export class Game extends Phaser.Scene {
 			const cell = path[index];
 			const nextCell = path.length > index + 1 ? path[index + 1] : null;
 
+			if (cell.robotObject) {
+				cell.robotObject.playAnimation("RobotArmature|Robot_Walking");
+			}
+
 			const targetPosition = new THREE.Vector3(
 				cell.visual.position.x,
 				cell.visual.position.y + 0.1,
 				cell.visual.position.z
 			);
 			robotModel.position.copy(targetPosition);
-			this.robotModel1.playAnimation("RobotArmature|Robot_Walking");
 
 			if (nextCell) {
 				const nextPosition = new THREE.Vector3(
@@ -426,8 +434,11 @@ export class Game extends Phaser.Scene {
 			}
 
 			if (index === path.length - 1) {
+				if (onComplete) {
+					onComplete();
+				}
+
 				clearInterval(interval);
-				this.robotModel1.playAnimation("RobotArmature|Robot_Idle");
 			}
 
 			previousCell = cell;

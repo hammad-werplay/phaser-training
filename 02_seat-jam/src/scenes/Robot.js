@@ -14,12 +14,14 @@ export class Robot {
 		});
 	}
 
-	playAnimation(name) {
+	playAnimation(name = "RobotArmature|Robot_Idle") {
 		const action = this.animationsByName[name];
 		if (!action) {
 			console.warn(`Animation "${name}" not found`);
 			return;
 		}
+
+		console.log(`Playing animation: ${name}`);
 
 		// Stop all other animations on this robot
 		Object.values(this.animationsByName).forEach((a) => {
