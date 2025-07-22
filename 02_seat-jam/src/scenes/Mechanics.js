@@ -1,11 +1,12 @@
 class Cell {
-	constructor(row, col, type = "nonSeat") {
+	constructor(row, col, type = "nonSeat", seatLabel) {
 		this.row = row;
 		this.col = col;
 		this.type = type;
 		this.isBlocked = false;
 		this.visual = null;
 		this._robot = null;
+		this.seatLabel = seatLabel;
 	}
 
 	get robot() {
@@ -57,9 +58,12 @@ class Cell {
 }
 
 export class Grid {
-	constructor(rows = 6, cols = 4, seatPositions = []) {
+	constructor(rows = 6, cols = 4, seats) {
 		this.rows = rows;
 		this.cols = cols;
+
+		const seatPositions = Object.values(seats);
+		const seatLabels = Object.keys(seats);
 
 		// initialize a 2D array of Cells
 		this.cells = Array.from({ length: rows }, (_, row) => {
@@ -70,7 +74,12 @@ export class Grid {
 					? "seat"
 					: "nonSeat";
 
-				return new Cell(row, col, type);
+				const seatLabel = seatLabels.find((label) => {
+					const [seatRow, seatCol] = seats[label];
+					return seatRow === row && seatCol === col;
+				});
+
+				return new Cell(row, col, type, seatLabel);
 			});
 		});
 	}

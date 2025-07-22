@@ -269,11 +269,7 @@ export class Game extends Phaser.Scene {
 	}
 
 	createInvisibleGrid() {
-		this.grid = new Grid(
-			this.totalRows,
-			this.totalCols,
-			Object.values(this.seats)
-		);
+		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
 		this.invisibleBoxes = [];
 		const boxSize = 1;
