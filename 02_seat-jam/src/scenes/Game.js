@@ -380,6 +380,15 @@ export class Game extends Phaser.Scene {
 						const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
 						end.robotObject.lookDown(cellToLookDown);
 						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
+						const isSeatCorrect = end.verifyCorrectSeatLabel();
+						console.log("Seat verification:", isSeatCorrect);
+						if (isSeatCorrect) {
+							end.visual.material.color.set(0x00ff00);
+							end.visual.material.opacity = 0.5;
+						} else {
+							end.visual.material.color.set(0xff0000);
+							end.visual.material.opacity = 0.5;
+						}
 					}
 
 					start.robot = null;

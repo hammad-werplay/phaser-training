@@ -7,6 +7,7 @@ class Cell {
 		this.visual = null;
 		this._robot = null;
 		this.seatLabel = seatLabel;
+		this.robotObject;
 	}
 
 	get robot() {
@@ -16,6 +17,10 @@ class Cell {
 	set robot(value) {
 		this._robot = value;
 		this.isBlocked = !!value;
+	}
+
+	verifyCorrectSeatLabel() {
+		return this.seatLabel === this.robotObject?.robotLabel;
 	}
 
 	/**

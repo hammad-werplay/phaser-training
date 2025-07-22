@@ -13,6 +13,7 @@ export class Robot {
 			this.animationsByName[clip.name] = action;
 		});
 		this.nameLabel;
+		this.robotLabel;
 	}
 
 	playAnimation(name = "RobotArmature|Robot_Idle") {
@@ -102,6 +103,7 @@ export class Robot {
 		sprite.scale.set(1, 0.5, 1);
 
 		this.nameLabel = sprite;
+		this.robotLabel = text;
 
 		return sprite;
 	}
