@@ -268,6 +268,42 @@ export class Game extends Phaser.Scene {
 		this.scale.on("resize", drawMainScene, this);
 	}
 
+	transformRobotHead = (robotObject, toSelected = true) => {
+		const head = robotObject.robot.getObjectByName("Head");
+		if (head) {
+			head.traverse((child) => {
+				if (child.isMesh) {
+					// Clone the material if it hasn't been cloned yet, to avoid affecting other robots
+					if (!child.material._isClonedForSelection) {
+						child.material = child.material.clone();
+						child.material._isClonedForSelection = true;
+						// Store original color, scale, and position for restoration
+						child.material._originalColor = child.material.color.clone();
+						child._originalScale = child.scale.clone();
+						child._originalPosition = child.position.clone();
+					}
+					if (toSelected) {
+						child.scale.set(1, 1, 1);
+						child.position.set(0, 0.1, 0);
+						child.material.color.set(0x00ffff);
+					} else {
+						// Restore original state
+						if (child.material._originalColor) {
+							child.material.color.copy(child.material._originalColor);
+						}
+						if (child._originalScale) {
+							child.scale.copy(child._originalScale);
+						}
+						if (child._originalPosition) {
+							child.position.copy(child._originalPosition);
+						}
+					}
+				}
+			});
+		}
+	};
+
+
 	createInvisibleGrid() {
 		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
@@ -356,6 +392,8 @@ export class Game extends Phaser.Scene {
 				if (!this.startCell) {
 					this.startCell = clickedBox;
 					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
+					this.transformRobotHead(clickedBox.robotObject, true);
+
 					return;
 				}
 
@@ -408,6 +446,8 @@ export class Game extends Phaser.Scene {
 						},
 					});
 
+					this.transformRobotHead(this.startCell.robotObject, false);
+
 					this.startCell = null;
 					return;
 				}
@@ -419,6 +459,7 @@ export class Game extends Phaser.Scene {
 					start.robotObject.playAnimation();
 					const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
 					end.robotObject.lookDown(cellToLookDown);
+					this.transformRobotHead(end.robotObject, false);
 
 					if (end.type === "seat") {
 						const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
@@ -657,9 +698,6 @@ export class Game extends Phaser.Scene {
 		this.initializeScene();
 		this.loadModels();
 
-		console.log("Grid: ", this.grid);
-		console.log("Main Scene Background: ", this.mainSceneBg);
-
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
 			onCtaPressed();
@@ -685,52 +723,43 @@ export class Game extends Phaser.Scene {
 
 				// Create overlay
 				const { width, height } = this.sys.game.canvas;
-				this.gameOverOverlay = this.add.rectangle(
-					width / 2,
-					height / 2,
-					width,
-					height,
-					0x000000,
-					0.7
-				)
+				this.gameOverOverlay = this.add
+					.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
 					.setOrigin(0.5)
 					.setDepth(10000);
 
 				// Show failedCharacters image above overlay
-				this.failedCharactersImage = this.add.image(
-					width / 2,
-					height / 2,
-					"failedCharacters"
-				)
+				this.failedCharactersImage = this.add
+					.image(width / 2, height / 2, "failedCharacters")
 					.setOrigin(0.5)
 					.setDepth(10001);
 
 				// Show "Game Over" text above image
-				this.gameOverText = this.add.text(
-					width / 2,
-					height / 2 + (this.failedCharactersImage.displayHeight / 2) + 40,
-					"Game Over! No moves left.",
-					{
-						fontSize: "36px",
-						color: "#fff",
-						fontStyle: "bold",
-						stroke: "#000",
-						strokeThickness: 6,
-						align: "center",
-					}
-				)
+				this.gameOverText = this.add
+					.text(
+						width / 2,
+						height / 2 + this.failedCharactersImage.displayHeight / 2 + 40,
+						"Game Over! No moves left.",
+						{
+							fontSize: "36px",
+							color: "#fff",
+							fontStyle: "bold",
+							stroke: "#000",
+							strokeThickness: 6,
+							align: "center",
+						}
+					)
 					.setOrigin(0.5)
 					.setDepth(10002);
 
 				// Move all robots below overlay and image
 				if (this.robots && Array.isArray(this.robots)) {
-					this.robots.forEach(robot => {
+					this.robots.forEach((robot) => {
 						if (robot.label) robot.label.setDepth(-10000);
 						if (robot.model) robot.model.visible = false;
 					});
 				}
 			}
-			
 		}
 	}
 }
