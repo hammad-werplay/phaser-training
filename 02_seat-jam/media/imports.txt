@@ -5,9 +5,12 @@ import { MADETommySoftBlackWOFF2 } from '../../media/fonts_MADE-Tommy-Soft-Black
 import { .DSStore } from '../../media/images_.DS_Store.js';
 import { BusWithTrackPNG } from '../../media/images_BusWithTrack.png.js';
 import { FailedCharactersPNG } from '../../media/images_FailedCharacters.png.js';
+import { angryPNG } from '../../media/images_angry.png.js';
 import { buttonPNG } from '../../media/images_button.png.js';
 import { footerPNG } from '../../media/images_footer.png.js';
 import { happyCharacterPNG } from '../../media/images_happyCharacter.png.js';
 import { movesBoxPNG } from '../../media/images_movesBox.png.js';
+import { smilePNG } from '../../media/images_smile.png.js';
+import { .DSStore } from '../../media/models_.DS_Store.js';
 import { RobotFBX } from '../../media/models_Robot.fbx.js';
 import { RobotMETA } from '../../media/models_Robot.meta.js';

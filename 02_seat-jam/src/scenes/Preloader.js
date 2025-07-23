@@ -11,6 +11,8 @@ import { footerPNG } from "../../media/images_footer.png.js";
 import { buttonPNG } from "../../media/images_button.png.js";
 import { movesBoxPNG } from "../../media/images_movesBox.png.js";
 import { BusWithTrackPNG } from "../../media/images_BusWithTrack.png.js";
+import { smilePNG } from "../../media/images_smile.png.js";
+import { angryPNG } from "../../media/images_angry.png.js";
 
 // Models
 import { FBXLoader } from "three/examples/jsm/Addons.js";
@@ -42,6 +44,8 @@ export class Preloader extends Phaser.Scene {
 		this.load.image("button", buttonPNG);
 		this.load.image("movesBox", movesBoxPNG);
 		this.load.image("busWithTrack", BusWithTrackPNG);
+		this.load.image("smile", smilePNG);
+		this.load.image("angry", angryPNG);
 
 		LoadBase64Audio(this, [{ key: "sound_fx", data: soundFxMP3 }]);
 	}
