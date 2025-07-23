@@ -276,6 +276,7 @@ export class Game extends Phaser.Scene {
 		const bg = this.mainSceneBg;
 
 		const drawGrid = () => {
+			console.log("Drawing grid...");
 			this.invisibleBoxes.forEach((box) => {
 				this.threeScene.remove(box);
 				box.geometry.dispose();
@@ -287,7 +288,9 @@ export class Game extends Phaser.Scene {
 			const cellHeight = 0.31;
 
 			const gridWidth = this.totalCols * cellWidth - 0.43;
-			const gridHeight = this.totalRows * cellHeight - 0.28;
+			const gridHeight =
+				this.totalRows * cellHeight -
+				(this.scale.width < 500 ? 0.4 : this.scale.width > 1000 ? 0.14 : 0.28);
 
 			const startingPositions = {
 				x: -gridWidth / 2,
@@ -588,6 +591,9 @@ export class Game extends Phaser.Scene {
 		this.setupThreeJS();
 		this.initializeScene();
 		this.loadModels();
+
+		console.log("Grid: ", this.grid);
+		console.log("Main Scene Background: ", this.mainSceneBg);
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
