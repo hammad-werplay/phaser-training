@@ -760,6 +760,57 @@ export class Game extends Phaser.Scene {
 					});
 				}
 			}
+
+			// If all robots are in their correct seats, show the success image
+			// Check if all seat cells have the correct robot label
+			if (
+				this.grid &&
+				this.grid.cells &&
+				this.grid.cells
+					.flat()
+					.filter((cell) => cell.type === "seat")
+					.every(
+						(cell) =>
+							cell.robotObject &&
+							typeof cell.verifyCorrectSeatLabel === "function" &&
+							cell.verifyCorrectSeatLabel()
+					)
+			) {
+				const { width, height } = this.sys.game.canvas;
+
+				// Create a semi-transparent overlay
+				this.successOverlay = this.add
+					.rectangle(0, 0, width, height, 0x000000, 0.7)
+					.setOrigin(0)
+					.setDepth(10000);
+
+				// Center the happy character image
+				this.successCharacterImage = this.add
+					.image(width / 2, height / 2, "happyCharacter")
+					.setOrigin(0.5)
+					.setDepth(10001);
+
+				// Place the "You Win!" text below the image, centered
+				this.successText = this.add
+					.text(
+						width / 2,
+						height / 2 + (this.successCharacterImage.displayHeight / 2) + 40,
+						"You Win!",
+						{
+							fontSize: "36px",
+							color: "#fff",
+							fontStyle: "bold",
+							stroke: "#000",
+							strokeThickness: 6,
+							align: "center",
+						}
+					)
+					.setOrigin(0.5)
+					.setDepth(10002);
+
+				// Stop all input and update logic
+				this.scene.pause();
+			}
 		}
 	}
 }

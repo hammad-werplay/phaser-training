@@ -116,6 +116,11 @@ export class Robot {
 		return sprite;
 	}
 
+	isInCorrectSeat(correctSeat) {
+		console.log(this.robotLabel, correctSeat);
+		return this.robotLabel === correctSeat;
+	}
+
 	getModel() {
 		return this.robot;
 	}
