@@ -276,7 +276,6 @@ export class Game extends Phaser.Scene {
 		const bg = this.mainSceneBg;
 
 		const drawGrid = () => {
-			console.log("Drawing grid...");
 			this.invisibleBoxes.forEach((box) => {
 				this.threeScene.remove(box);
 				box.geometry.dispose();

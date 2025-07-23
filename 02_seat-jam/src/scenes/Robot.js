@@ -28,6 +28,8 @@ export class Robot {
 			if (a !== action) a.stop();
 		});
 
+		console.log(`Playing animation: ${name}`);
+
 		action.reset();
 		action.setLoop(
 			name.includes("Sitting") ? THREE.LoopOnce : THREE.LoopRepeat
@@ -45,6 +47,7 @@ export class Robot {
 
 		cell.robotObject = this;
 		cell.robot = this.robot;
+		cell.isBlocked = true;
 
 		if (cell.type === "seat") {
 			this.playAnimation("RobotArmature|Robot_Sitting");
