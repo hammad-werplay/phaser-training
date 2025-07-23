@@ -417,6 +417,8 @@ export class Game extends Phaser.Scene {
 					end.robot = start.robot;
 					end.robotObject = start.robotObject;
 					start.robotObject.playAnimation();
+					const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
+					end.robotObject.lookDown(cellToLookDown);
 
 					if (end.type === "seat") {
 						const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
@@ -468,55 +470,74 @@ export class Game extends Phaser.Scene {
 
 		let index = 0;
 		let previousCell = null;
+		const MOVE_DURATION = 350; // ms
 
-		const interval = setInterval(() => {
-			if (index >= path.length) {
-				clearInterval(interval);
-				return;
-			}
-
-			const cell = path[index];
-			const nextCell = path.length > index + 1 ? path[index + 1] : null;
-
-			if (cell.robotObject) {
-				cell.robotObject.playAnimation("RobotArmature|Robot_Walking");
-			}
-
-			const targetPosition = new THREE.Vector3(
+		const getCellPosition = (cell) => {
+			return new THREE.Vector3(
 				cell.visual.position.x,
 				cell.visual.position.y + 0.1,
 				cell.visual.position.z
 			);
-			robotModel.position.copy(targetPosition);
+		};
 
-			if (nextCell) {
-				const nextPosition = new THREE.Vector3(
-					nextCell.visual.position.x,
-					nextCell.visual.position.y + 0.1,
-					nextCell.visual.position.z
-				);
-				robotModel.lookAt(nextPosition);
-			}
+		const moveToCell = (fromCell, toCell, nextCell, onArrive) => {
+			const startPos = getCellPosition(fromCell);
+			const endPos = getCellPosition(toCell);
+			const startTime = performance.now();
 
-			if (previousCell && previousCell.visual) {
-				previousCell.visual.material.color.set(0xff0000);
-			}
+			const animate = (now) => {
+				const elapsed = now - startTime;
+				const t = Math.min(elapsed / MOVE_DURATION, 1);
+				const ease = -(Math.cos(Math.PI * t) - 1) / 2; // easeInOutSine
 
-			if (cell.visual) {
-				cell.visual.material.color.set(0x00ff00);
-			}
+				robotModel.position.lerpVectors(startPos, endPos, ease);
 
-			if (index === path.length - 1) {
-				if (onComplete) {
-					onComplete();
+				// Smoothly rotate towards next cell if available
+				if (nextCell) {
+					const nextPos = getCellPosition(nextCell);
+					const direction = nextPos
+						.clone()
+						.sub(robotModel.position)
+						.normalize();
+					const currentDir = robotModel.getWorldDirection(new THREE.Vector3());
+					const lerpedDir = currentDir.lerp(direction, 0.15 * ease).normalize();
+					const lookTarget = robotModel.position.clone().add(lerpedDir);
+					robotModel.lookAt(lookTarget);
 				}
 
-				clearInterval(interval);
+				if (t < 1) {
+					requestAnimationFrame(animate);
+				} else {
+					robotModel.position.copy(endPos);
+					if (onArrive) onArrive();
+				}
+			};
+
+			requestAnimationFrame(animate);
+		};
+
+		const step = () => {
+			if (index >= path.length) {
+				if (onComplete) onComplete();
+				return;
 			}
 
-			previousCell = cell;
-			index++;
-		}, 500);
+			const cell = path[index];
+			const nextCell = path[index + 1];
+
+			// Play walking animation
+			if (cell.robotObject) {
+				cell.robotObject.playAnimation("RobotArmature|Robot_Walking");
+			}
+
+			moveToCell(previousCell || cell, cell, nextCell, () => {
+				previousCell = cell;
+				index++;
+				setTimeout(step, 30);
+			});
+		};
+
+		step();
 	}
 
 	initializeScene() {
