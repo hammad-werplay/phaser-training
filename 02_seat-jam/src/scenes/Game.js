@@ -374,6 +374,17 @@ export class Game extends Phaser.Scene {
 				if (!path) {
 					console.error("No path found");
 					this.startCell.robotObject.playAnimation();
+
+					// Add angry emotion from robot position
+					const worldPos = this.startCell.robotObject.robot.position.clone();
+					worldPos.y += 1;
+					const screen = this.worldToScreen(
+						worldPos,
+						this.camera,
+						this.threeRenderer.domElement
+					);
+					console.log("Screen Position:", screen);
+
 					this.startCell = null;
 					return;
 				}
@@ -409,6 +420,17 @@ export class Game extends Phaser.Scene {
 		});
 	}
 
+	worldToScreen(position, camera, rendererDom) {
+		const projected = position.clone().project(camera);
+
+		const width = rendererDom.clientWidth;
+		const height = rendererDom.clientHeight;
+
+		const x = ((projected.x + 1) / 2) * width;
+		const y = ((-projected.y + 1) / 2) * height;
+
+		return { x, y };
+	}
 	movePlayerAlongPath(path, onComplete) {
 		if (!path || path.length === 0) {
 			console.error("No path found");
