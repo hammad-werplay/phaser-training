@@ -377,13 +377,36 @@ export class Game extends Phaser.Scene {
 
 					// Add angry emotion from robot position
 					const worldPos = this.startCell.robotObject.robot.position.clone();
-					worldPos.y += 1;
+					worldPos.y += 1.3;
 					const screen = this.worldToScreen(
 						worldPos,
 						this.camera,
 						this.threeRenderer.domElement
 					);
-					console.log("Screen Position:", screen);
+
+					const angryImage = this.add.image(screen.x, screen.y, "angry");
+					angryImage.setOrigin(0.5);
+					angryImage.setScale(0.12);
+					angryImage.setDepth(1000);
+					this.tweens.add({
+						targets: angryImage,
+						alpha: { from: 0, to: 1 },
+						scale: { from: 0, to: 0.13 },
+						duration: 300,
+						yoyo: true,
+						hold: 400,
+						ease: "Back.Out",
+						onYoyo: () => {
+							this.tweens.add({
+								targets: angryImage,
+								alpha: 0,
+								scale: 0.1,
+								duration: 800,
+								ease: "Expo.easeIn",
+								onComplete: () => angryImage.destroy(),
+							});
+						},
+					});
 
 					this.startCell = null;
 					return;
