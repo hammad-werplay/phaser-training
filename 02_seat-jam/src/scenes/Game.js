@@ -472,13 +472,53 @@ export class Game extends Phaser.Scene {
 						end.robotObject.lookDown(cellToLookDown);
 						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
 						const isSeatCorrect = end.verifyCorrectSeatLabel();
-						console.log("Seat verification:", isSeatCorrect);
+
 						if (isSeatCorrect) {
 							end.visual.material.color.set(0x00ff00);
 							end.visual.material.opacity = 0.5;
+
+							// Add a smile image above the robot
+							const worldPos = end.robotObject.robot.position.clone();
+							worldPos.x += end.col === 2 ? 0.2 : -0.2;
+							worldPos.y += 1.3;
+
+							const screen = this.worldToScreen(
+								worldPos,
+								this.camera,
+								this.threeRenderer.domElement
+							);
+
+							console.log("screen", screen);
+
+							const smileImage = this.add.image(screen.x, screen.y, "smile");
+							smileImage.setOrigin(0.5);
+							smileImage.setScale(0.12);
+							smileImage.setDepth(1000);
+
+							this.tweens.add({
+								targets: smileImage,
+								alpha: { from: 0, to: 1 },
+								scale: { from: 0, to: 0.13 },
+								duration: 300,
+								yoyo: true,
+								hold: 400,
+								ease: "Back.Out",
+								onYoyo: () => {
+									this.tweens.add({
+										targets: smileImage,
+										alpha: 0,
+										scale: 0.1,
+										duration: 800,
+										ease: "Expo.easeIn",
+										onComplete: () => smileImage.destroy(),
+									});
+								},
+							});
 						} else {
 							end.visual.material.color.set(0xff0000);
 							end.visual.material.opacity = 0.5;
+
+							// Add a sad image above the robot
 						}
 					}
 
