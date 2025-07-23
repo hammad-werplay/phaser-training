@@ -28,7 +28,12 @@ export class Robot {
 			if (a !== action) a.stop();
 		});
 
-		action.reset().play();
+		action.reset();
+		action.setLoop(
+			name.includes("Sitting") ? THREE.LoopOnce : THREE.LoopRepeat
+		);
+		action.clampWhenFinished = true;
+		action.play();
 	}
 
 	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle", labelText) {
