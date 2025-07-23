@@ -303,7 +303,6 @@ export class Game extends Phaser.Scene {
 		}
 	};
 
-
 	createInvisibleGrid() {
 		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
@@ -690,6 +689,110 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera);
 	}
 
+	checkWin() {
+		// If all robots are in their correct seats, show the success image
+		// Check if all seat cells have the correct robot label
+		if (
+			!this.gameWon &&
+			this.grid &&
+			this.grid.cells &&
+			this.grid.cells
+				.flat()
+				.filter((cell) => cell.type === "seat")
+				.every(
+					(cell) =>
+						cell.robotObject &&
+						typeof cell.verifyCorrectSeatLabel === "function" &&
+						cell.verifyCorrectSeatLabel()
+				)
+		) {
+			const { width, height } = this.sys.game.canvas;
+
+			// Create a semi-transparent overlay
+			this.successOverlay = this.add
+				.rectangle(0, 0, width, height, 0x000000, 0.7)
+				.setOrigin(0)
+				.setDepth(10000);
+
+			// Center the happy character image
+			this.successCharacterImage = this.add
+				.image(width / 2, height / 2, "happyCharacter")
+				.setOrigin(0.5)
+				.setDepth(10001);
+
+			// Place the "You Win!" text below the image, centered
+			this.successText = this.add
+				.text(
+					width / 2,
+					height / 2 + this.successCharacterImage.displayHeight / 2 + 40,
+					"You Win!",
+					{
+						fontSize: "36px",
+						color: "#fff",
+						fontStyle: "bold",
+						stroke: "#000",
+						strokeThickness: 6,
+						align: "center",
+					}
+				)
+				.setOrigin(0.5)
+				.setDepth(10002);
+
+			// Stop all input and update logic
+			this.scene.pause();
+			this.gameWon = true;
+			return;
+		}
+	}
+
+	checkLoss() {
+		if (this.movesLeft <= 0 && !this.gameOverShown && !this.gameWon) {
+			this.gameOverShown = true;
+
+			// Stop all input and update logic
+			this.scene.pause();
+
+			// Create overlay
+			const { width, height } = this.sys.game.canvas;
+			this.gameOverOverlay = this.add
+				.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
+				.setOrigin(0.5)
+				.setDepth(10000);
+
+			// Show failedCharacters image above overlay
+			this.failedCharactersImage = this.add
+				.image(width / 2, height / 2, "failedCharacters")
+				.setOrigin(0.5)
+				.setDepth(10001);
+
+			// Show "Game Over" text above image
+			this.gameOverText = this.add
+				.text(
+					width / 2,
+					height / 2 + this.failedCharactersImage.displayHeight / 2 + 40,
+					"Game Over! No moves left.",
+					{
+						fontSize: "36px",
+						color: "#fff",
+						fontStyle: "bold",
+						stroke: "#000",
+						strokeThickness: 6,
+						align: "center",
+					}
+				)
+				.setOrigin(0.5)
+				.setDepth(10002);
+
+			// Move all robots below overlay and image
+			if (this.robots && Array.isArray(this.robots)) {
+				this.robots.forEach((robot) => {
+					if (robot.label) robot.label.setDepth(-10000);
+					if (robot.model) robot.model.visible = false;
+				});
+			}
+		}
+	}
+
 	create() {
 		this.adNetworkSetup();
 
@@ -709,6 +812,9 @@ export class Game extends Phaser.Scene {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
 
+			this.checkWin();
+			this.checkLoss();
+
 			this.robots.forEach((robot) => {
 				if (robot.mixer) {
 					robot.mixer.update(this.game.loop.delta / 1000);
@@ -716,102 +822,6 @@ export class Game extends Phaser.Scene {
 
 				robot.updateLabelPosition(this.camera);
 			});
-			if (this.movesLeft <= 0 && !this.gameOverShown) {
-				this.gameOverShown = true;
-
-				// Stop all input and update logic
-				this.scene.pause();
-
-				// Create overlay
-				const { width, height } = this.sys.game.canvas;
-				this.gameOverOverlay = this.add
-					.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
-					.setOrigin(0.5)
-					.setDepth(10000);
-
-				// Show failedCharacters image above overlay
-				this.failedCharactersImage = this.add
-					.image(width / 2, height / 2, "failedCharacters")
-					.setOrigin(0.5)
-					.setDepth(10001);
-
-				// Show "Game Over" text above image
-				this.gameOverText = this.add
-					.text(
-						width / 2,
-						height / 2 + this.failedCharactersImage.displayHeight / 2 + 40,
-						"Game Over! No moves left.",
-						{
-							fontSize: "36px",
-							color: "#fff",
-							fontStyle: "bold",
-							stroke: "#000",
-							strokeThickness: 6,
-							align: "center",
-						}
-					)
-					.setOrigin(0.5)
-					.setDepth(10002);
-
-				// Move all robots below overlay and image
-				if (this.robots && Array.isArray(this.robots)) {
-					this.robots.forEach((robot) => {
-						if (robot.label) robot.label.setDepth(-10000);
-						if (robot.model) robot.model.visible = false;
-					});
-				}
-			}
-
-			// If all robots are in their correct seats, show the success image
-			// Check if all seat cells have the correct robot label
-			if (
-				this.grid &&
-				this.grid.cells &&
-				this.grid.cells
-					.flat()
-					.filter((cell) => cell.type === "seat")
-					.every(
-						(cell) =>
-							cell.robotObject &&
-							typeof cell.verifyCorrectSeatLabel === "function" &&
-							cell.verifyCorrectSeatLabel()
-					)
-			) {
-				const { width, height } = this.sys.game.canvas;
-
-				// Create a semi-transparent overlay
-				this.successOverlay = this.add
-					.rectangle(0, 0, width, height, 0x000000, 0.7)
-					.setOrigin(0)
-					.setDepth(10000);
-
-				// Center the happy character image
-				this.successCharacterImage = this.add
-					.image(width / 2, height / 2, "happyCharacter")
-					.setOrigin(0.5)
-					.setDepth(10001);
-
-				// Place the "You Win!" text below the image, centered
-				this.successText = this.add
-					.text(
-						width / 2,
-						height / 2 + (this.successCharacterImage.displayHeight / 2) + 40,
-						"You Win!",
-						{
-							fontSize: "36px",
-							color: "#fff",
-							fontStyle: "bold",
-							stroke: "#000",
-							strokeThickness: 6,
-							align: "center",
-						}
-					)
-					.setOrigin(0.5)
-					.setDepth(10002);
-
-				// Stop all input and update logic
-				this.scene.pause();
-			}
 		}
 	}
 }
