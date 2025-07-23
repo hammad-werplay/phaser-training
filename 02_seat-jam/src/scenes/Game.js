@@ -677,7 +677,7 @@ export class Game extends Phaser.Scene {
 
 				robot.updateLabelPosition(this.camera);
 			});
-			if (this.movesLeft <= 6 && !this.gameOverShown) {
+			if (this.movesLeft <= 0 && !this.gameOverShown) {
 				this.gameOverShown = true;
 
 				// Stop all input and update logic
@@ -725,8 +725,8 @@ export class Game extends Phaser.Scene {
 				// Move all robots below overlay and image
 				if (this.robots && Array.isArray(this.robots)) {
 					this.robots.forEach(robot => {
-						if (robot.label) robot.label.setDepth(9999);
-						// If you have robot sprites/images in Phaser, set their depth here as well
+						if (robot.label) robot.label.setDepth(-10000);
+						if (robot.model) robot.model.visible = false;
 					});
 				}
 			}
