@@ -393,11 +393,18 @@ export class Game extends Phaser.Scene {
 					this.startCell = clickedBox;
 					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
 					this.transformRobotHead(clickedBox.robotObject, true);
-
 					return;
 				}
 
 				const endCell = clickedBox;
+
+				if (this.startCell && endCell.robot && endCell.robotObject) {
+					this.transformRobotHead(this.startCell.robotObject, false);
+					this.startCell.robotObject.playAnimation();
+					this.startCell = endCell;
+					this.transformRobotHead(endCell.robotObject, true);
+					return;
+				}
 
 				if (this.startCell.key() === endCell.key()) {
 					this.startCell = null;
@@ -597,26 +604,20 @@ export class Game extends Phaser.Scene {
 		}
 
 		const robotPositions = [
-			[0, 0],
-			[2, 0],
-			[3, 0],
-			[5, 0],
-			[4, 1],
-			[4, 2],
-			[3, 3],
-			[1, 2],
+			{ seat: "A3", position: [0, 0] },
+			{ seat: "B1", position: [2, 0] },
+			{ seat: "A1", position: [3, 0] },
+			{ seat: "A2", position: [5, 0] },
+			{ seat: "A4", position: [4, 1] },
+			{ seat: "B2", position: [4, 2] },
+			{ seat: "B3", position: [3, 3] },
+			{ seat: "B4", position: [1, 2] },
 		];
 
-		const availableSeats = Object.keys(this.seats);
-		const shuffledSeats = availableSeats.sort(() => Math.random() - 0.5);
-
-		this.robots = robotPositions.map(([row, col]) => {
-			const cell = this.grid.getCell(row, col);
+		this.robots = robotPositions.map(({ seat, position }) => {
+			const cell = this.grid.getCell(position[0], position[1]);
 			const robotModel = new Robot(robotModelRef);
-
-			const seatName = shuffledSeats.pop() || "A1";
-
-			robotModel.attachTo(cell, this.threeScene, undefined, seatName);
+			robotModel.attachTo(cell, this.threeScene, undefined, seat);
 			return robotModel;
 		});
 	}
