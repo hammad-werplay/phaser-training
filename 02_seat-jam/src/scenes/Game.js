@@ -14,14 +14,14 @@ export class Game extends Phaser.Scene {
 		this.totalRows = 6;
 		this.totalCols = 4;
 		this.seats = {
-			A1: [1, 1],
-			A2: [2, 1],
-			A3: [3, 1],
-			A4: [4, 1],
-			B1: [1, 2],
-			B2: [2, 2],
-			B3: [3, 2],
-			B4: [4, 2],
+			A1: [4, 1],
+			A2: [3, 1],
+			A3: [2, 1],
+			A4: [1, 1],
+			B1: [4, 2],
+			B2: [3, 2],
+			B3: [2, 2],
+			B4: [1, 2],
 		};
 	}
 
