@@ -677,11 +677,60 @@ export class Game extends Phaser.Scene {
 
 				robot.updateLabelPosition(this.camera);
 			});
+			if (this.movesLeft <= 6 && !this.gameOverShown) {
+				this.gameOverShown = true;
 
-			if (this.movesLeft <= 0) {
-				// Game Over Logic
-				alert("Game Over! No moves left.");
+				// Stop all input and update logic
+				this.scene.pause();
+
+				// Create overlay
+				const { width, height } = this.sys.game.canvas;
+				this.gameOverOverlay = this.add.rectangle(
+					width / 2,
+					height / 2,
+					width,
+					height,
+					0x000000,
+					0.7
+				)
+					.setOrigin(0.5)
+					.setDepth(10000);
+
+				// Show failedCharacters image above overlay
+				this.failedCharactersImage = this.add.image(
+					width / 2,
+					height / 2,
+					"failedCharacters"
+				)
+					.setOrigin(0.5)
+					.setDepth(10001);
+
+				// Show "Game Over" text above image
+				this.gameOverText = this.add.text(
+					width / 2,
+					height / 2 + (this.failedCharactersImage.displayHeight / 2) + 40,
+					"Game Over! No moves left.",
+					{
+						fontSize: "36px",
+						color: "#fff",
+						fontStyle: "bold",
+						stroke: "#000",
+						strokeThickness: 6,
+						align: "center",
+					}
+				)
+					.setOrigin(0.5)
+					.setDepth(10002);
+
+				// Move all robots below overlay and image
+				if (this.robots && Array.isArray(this.robots)) {
+					this.robots.forEach(robot => {
+						if (robot.label) robot.label.setDepth(9999);
+						// If you have robot sprites/images in Phaser, set their depth here as well
+					});
+				}
 			}
+			
 		}
 	}
 }
