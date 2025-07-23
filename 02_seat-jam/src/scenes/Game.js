@@ -756,31 +756,51 @@ export class Game extends Phaser.Scene {
 
 			// Center the happy character image
 			this.successCharacterImage = this.add
-				.image(width / 2, height / 2, "happyCharacter")
+				.image(width / 2, height / 2 - 50, "happyCharacter")
 				.setOrigin(0.5)
-				.setDepth(10001);
+				.setDepth(10001)
+				.setScale(0.7);
 
-			// Place the "You Win!" text below the image, centered
-			this.successText = this.add
-				.text(
-					width / 2,
-					height / 2 + this.successCharacterImage.displayHeight / 2 + 40,
-					"You Win!",
-					{
+				const centerX = width / 2 - 100;
+				const baseY = height / 2 - 280;
+	
+				const word1 = this.add
+					.text(0, 0, "EVERYONE ", {
 						fontSize: "36px",
 						color: "#fff",
 						fontStyle: "bold",
 						stroke: "#000",
 						strokeThickness: 6,
-						align: "center",
-					}
-				)
-				.setOrigin(0.5)
-				.setDepth(10002);
+					})
+					.setOrigin(0, 0.5);
+	
+				const word2 = this.add
+					.text(word1.width, 0, "SEATED!", {
+						fontSize: "36px",
+						color: "#00ff00", // green
+						fontStyle: "bold",
+						stroke: "#000",
+						strokeThickness: 6,
+					})
+					.setOrigin(0, 0.5);
+
+	
+				word1.setPosition(0, 0);
+				word2.setPosition(20, word1.height);
+					
+				this.gameOverText = this.add
+					.container(centerX, baseY, [word1, word2])
+					.setDepth(10002)
+					.setSize(
+						Math.max(word1.width, word2.width),
+						word1.height + word2.height
+				);
+			
+			this.createDownloadBtn();
 
 			// Stop all input and update logic
-			this.scene.pause();
 			this.gameWon = true;
+			this.threeCanvas.style.zIndex = "-1";
 			return;
 		}
 	}
@@ -789,9 +809,6 @@ export class Game extends Phaser.Scene {
 		if (this.movesLeft <= 0 && !this.gameOverShown && !this.gameWon) {
 			this.gameOverShown = true;
 
-			// Stop all input and update logic
-			this.scene.pause();
-
 			// Create overlay
 			const { width, height } = this.sys.game.canvas;
 			this.gameOverOverlay = this.add
@@ -799,38 +816,108 @@ export class Game extends Phaser.Scene {
 				.setOrigin(0.5)
 				.setDepth(10000);
 
-			// Show failedCharacters image above overlay
 			this.failedCharactersImage = this.add
 				.image(width / 2, height / 2, "failedCharacters")
 				.setOrigin(0.5)
+				.setScale(0.7)
 				.setDepth(10001);
 
-			// Show "Game Over" text above image
-			this.gameOverText = this.add
-				.text(
-					width / 2,
-					height / 2 + this.failedCharactersImage.displayHeight / 2 + 40,
-					"Game Over! No moves left.",
-					{
-						fontSize: "36px",
-						color: "#fff",
-						fontStyle: "bold",
-						stroke: "#000",
-						strokeThickness: 6,
-						align: "center",
-					}
-				)
-				.setOrigin(0.5)
-				.setDepth(10002);
+			const centerX = width / 2 - 100;
+			const baseY = height / 2 - 280;
 
-			// Move all robots below overlay and image
-			if (this.robots && Array.isArray(this.robots)) {
-				this.robots.forEach((robot) => {
-					if (robot.label) robot.label.setDepth(-10000);
-					if (robot.model) robot.model.visible = false;
-				});
-			}
+			const word1 = this.add
+				.text(0, 0, "EVERYONE ", {
+					fontSize: "36px",
+					color: "#fff",
+					fontStyle: "bold",
+					stroke: "#000",
+					strokeThickness: 6,
+				})
+				.setOrigin(0, 0.5);
+
+			const word2 = this.add
+				.text(word1.width, 0, "NOT", {
+					fontSize: "36px",
+					color: "#ff0000", // red
+					fontStyle: "bold",
+					stroke: "#000",
+					strokeThickness: 6,
+				})
+				.setOrigin(0, 0.5);
+
+			const word3 = this.add
+				.text(word1.width + word2.width, 0, " SEATED", {
+					fontSize: "36px",
+					color: "#fff",
+					fontStyle: "bold",
+					stroke: "#000",
+					strokeThickness: 6,
+				})
+				.setOrigin(0, 0.5);
+
+			word1.setPosition(0, 0);
+			word2.setPosition(50, word1.height);
+			word3.setPosition(0, word1.height + word2.height);
+
+			this.gameOverText = this.add
+				.container(centerX, baseY, [word1, word2, word3])
+				.setDepth(10002)
+				.setSize(
+					Math.max(word1.width, word2.width, word3.width),
+					word1.height + word2.height + word3.height
+				);
+
+			this.createDownloadBtn();
+
+			this.threeCanvas.style.zIndex = "-1";
 		}
+	}
+
+	createDownloadBtn() {
+		const { width, height } = this.sys.game.canvas;
+
+		const downloadBtn = this.add
+			.image(width / 2, height - this.footerHeight / 2 - 80, "button")
+			.setOrigin(0.5)
+			.setScale(0.7)
+			.setDepth(10001)
+			.setInteractive();
+
+		const downloadText = this.add
+			.text(width / 2, height - this.footerHeight / 2 - 80, "DOWNLOAD", {
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "24px",
+				color: "#ffffff",
+				fontStyle: "bold",
+				align: "center",
+				stroke: "#000000",
+				strokeThickness: 2,
+			})
+			.setOrigin(0.5)
+			.setDepth(10002)
+			.setOrigin(0.5);
+
+		this.tweens.add({
+			targets: [downloadBtn, downloadText],
+			scaleX: { from: 0.7, to: 0.78 },
+			scaleY: { from: 0.7, to: 0.78 },
+			yoyo: true,
+			repeat: -1,
+			duration: 1200,
+			ease: "Sine.easeInOut",
+		});
+
+		this.tweens.add({
+			targets: [downloadBtn, downloadText],
+			y: "+=8",
+			yoyo: true,
+			repeat: -1,
+			duration: 1800,
+			ease: "Sine.easeInOut",
+		});
+
+		// Add a glow effect to the button text for a modern look
+		downloadText.setShadow(0, 0, "#00ffff", 16, true, true);
 	}
 
 	create() {
