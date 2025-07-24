@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Robot } from "./Robot";
+import { Utils } from "./Utils";
 
 export class GameUI {
 	constructor(scene) {
@@ -300,16 +301,7 @@ export class GameUI {
 			return;
 		}
 
-		const robotPositions = [
-			{ seat: "A3", position: [0, 0] },
-			{ seat: "B1", position: [2, 0] },
-			{ seat: "A1", position: [3, 0] },
-			{ seat: "A2", position: [5, 0] },
-			{ seat: "A4", position: [4, 1] },
-			{ seat: "B2", position: [4, 2] },
-			{ seat: "B3", position: [3, 3] },
-			{ seat: "B4", position: [1, 2] },
-		];
+		const robotPositions = Utils.createGameScenario();
 
 		this.scene.robots = robotPositions.map(({ seat, position }) => {
 			const cell = this.scene.grid.getCell(position[0], position[1]);
@@ -369,7 +361,7 @@ export class GameUI {
 		imageSprite.position.set(centerX, 0, centerZ - 1.1);
 
 		// Make the image big
-		const bigScale = 2.8	;
+		const bigScale = 2.8;
 		imageSprite.scale.set(bigScale * 3.8, bigScale * 0.4, bigScale * 0.8);
 
 		// Always face the camera
