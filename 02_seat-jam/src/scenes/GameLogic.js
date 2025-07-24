@@ -175,21 +175,21 @@ export class GameLogic {
 					end.robotObject.lookDown(cellToLookDown);
 					end.robotObject.transformRobotHead(false);
 
+					let isSeatCorrect = false;
 					if (end.type === "seat") {
 						const cellToLookDown = this.scene.grid.getCell(
 							end.row + 1,
 							end.col
 						);
 						end.robotObject.lookDown(cellToLookDown);
-						const isSeatCorrect = end.verifyCorrectSeatLabel();
+						isSeatCorrect = end.verifyCorrectSeatLabel();
 
-						if (isSeatCorrect) {
-							end.robotObject.isSeatedCorrectly = true;
-							end.robotObject.showEmotionSpriteAboveRobot('smile', this.scene);
-						} else {
-							end.robotObject.isSeatedCorrectly = false;
-							end.robotObject.showEmotionSpriteAboveRobot('angry', this.scene);
-						}
+						end.robotObject.isSeatedCorrectly = isSeatCorrect;
+						end.robotObject.showEmotionSpriteAboveRobot(isSeatCorrect ? 'smile' : 'angry', this.scene);
+					}
+
+					if (!isSeatCorrect) {
+						end.robotObject.isSeatedCorrectly = false;
 					}
 
 					start.robot = null;
