@@ -124,4 +124,39 @@ export class Robot {
 	getModel() {
 		return this.robot;
 	}
+
+	static transformRobotHead = (robotObject, toSelected = true) => {
+		const head = robotObject.robot.getObjectByName("Head");
+		if (head) {
+			head.traverse((child) => {
+				if (child.isMesh) {
+					// Clone the material if it hasn't been cloned yet, to avoid affecting other robots
+					if (!child.material._isClonedForSelection) {
+						child.material = child.material.clone();
+						child.material._isClonedForSelection = true;
+						// Store original color, scale, and position for restoration
+						child.material._originalColor = child.material.color.clone();
+						child._originalScale = child.scale.clone();
+						child._originalPosition = child.position.clone();
+					}
+					if (toSelected) {
+						child.scale.set(1, 1, 1);
+						child.position.set(0, 0.1, 0);
+						child.material.color.set(0x00ffff);
+					} else {
+						// Restore original state
+						if (child.material._originalColor) {
+							child.material.color.copy(child.material._originalColor);
+						}
+						if (child._originalScale) {
+							child.scale.copy(child._originalScale);
+						}
+						if (child._originalPosition) {
+							child.position.copy(child._originalPosition);
+						}
+					}
+				}
+			});
+		}
+	};
 }

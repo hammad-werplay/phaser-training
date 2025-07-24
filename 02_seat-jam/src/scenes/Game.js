@@ -269,41 +269,6 @@ export class Game extends Phaser.Scene {
 		this.scale.on("resize", drawMainScene, this);
 	}
 
-	transformRobotHead = (robotObject, toSelected = true) => {
-		const head = robotObject.robot.getObjectByName("Head");
-		if (head) {
-			head.traverse((child) => {
-				if (child.isMesh) {
-					// Clone the material if it hasn't been cloned yet, to avoid affecting other robots
-					if (!child.material._isClonedForSelection) {
-						child.material = child.material.clone();
-						child.material._isClonedForSelection = true;
-						// Store original color, scale, and position for restoration
-						child.material._originalColor = child.material.color.clone();
-						child._originalScale = child.scale.clone();
-						child._originalPosition = child.position.clone();
-					}
-					if (toSelected) {
-						child.scale.set(1, 1, 1);
-						child.position.set(0, 0.1, 0);
-						child.material.color.set(0x00ffff);
-					} else {
-						// Restore original state
-						if (child.material._originalColor) {
-							child.material.color.copy(child.material._originalColor);
-						}
-						if (child._originalScale) {
-							child.scale.copy(child._originalScale);
-						}
-						if (child._originalPosition) {
-							child.position.copy(child._originalPosition);
-						}
-					}
-				}
-			});
-		}
-	};
-
 	createInvisibleGrid() {
 		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
@@ -392,17 +357,17 @@ export class Game extends Phaser.Scene {
 				if (!this.startCell) {
 					this.startCell = clickedBox;
 					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
-					this.transformRobotHead(clickedBox.robotObject, true);
+					Robot.transformRobotHead(clickedBox.robotObject, true);
 					return;
 				}
 
 				const endCell = clickedBox;
 
 				if (this.startCell && endCell.robot && endCell.robotObject) {
-					this.transformRobotHead(this.startCell.robotObject, false);
+					Robot.transformRobotHead(this.startCell.robotObject, false);
 					this.startCell.robotObject.playAnimation();
 					this.startCell = endCell;
-					this.transformRobotHead(endCell.robotObject, true);
+					Robot.transformRobotHead(endCell.robotObject, true);
 					return;
 				}
 
@@ -453,7 +418,7 @@ export class Game extends Phaser.Scene {
 						},
 					});
 
-					this.transformRobotHead(this.startCell.robotObject, false);
+					Robot.transformRobotHead(this.startCell.robotObject, false);
 
 					this.startCell = null;
 					return;
@@ -466,7 +431,7 @@ export class Game extends Phaser.Scene {
 					start.robotObject.playAnimation();
 					const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
 					end.robotObject.lookDown(cellToLookDown);
-					this.transformRobotHead(end.robotObject, false);
+					Robot.transformRobotHead(end.robotObject, false);
 
 					if (end.type === "seat") {
 						const cellToLookDown = this.grid.getCell(end.row + 1, end.col);
