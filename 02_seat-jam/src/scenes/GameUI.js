@@ -109,4 +109,102 @@ export class GameUI {
 		// Redraw on resize
 		this.scene.scale.on("resize", drawMovesBox, this);
 	}
+
+	createFooter() {
+		this.scene.footerImage = this.scene.add
+			.image(0, 0, "footer")
+			.setOrigin(0.5, 1);
+		this.scene.downloadButton = this.scene.add
+			.image(0, 0, "button")
+			.setOrigin(0.5);
+		this.scene.downloadText = this.scene.add
+			.text(0, 0, "DOWNLOAD", {
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "24px",
+				color: "#ffffff",
+				fontFamily: "Arial",
+				fontStyle: "bold",
+				align: "center",
+				stroke: "#000000",
+				strokeThickness: 2,
+			})
+			.setOrigin(0.5);
+
+		const drawFooter = () => {
+			const { width: canvasWidth, height: canvasHeight } = this.scene.scale;
+
+			// Footer scaling
+			const scaleX = canvasWidth / this.scene.footerImage.width;
+			const scaleY = scaleX;
+			this.scene.footerImage.setScale(scaleX, scaleY);
+			this.scene.footerImage.setPosition(canvasWidth / 2, canvasHeight);
+
+			// Download Button scaling
+			const footerWidth = this.scene.footerImage.displayWidth;
+			const footerHeight = this.scene.footerImage.displayHeight;
+			const buttonTargetHeight = footerHeight * 0.61;
+			const buttonScale = buttonTargetHeight / this.scene.downloadButton.height;
+
+			const buttonPadding = 20 * buttonScale;
+			this.scene.downloadButton.setScale(buttonScale);
+			this.scene.downloadButton.setPosition(
+				this.scene.footerImage.x +
+					footerWidth / 2 -
+					this.scene.downloadButton.displayWidth / 2 -
+					5 * 20 * buttonScale,
+				this.scene.footerImage.y - footerHeight / 2 + 20 * buttonScale
+			);
+
+			// Text scaling
+			const textScale = Math.max(buttonTargetHeight * 0.2, 12);
+			this.scene.downloadText.setFontSize(textScale);
+			this.scene.downloadText.setPosition(
+				this.scene.downloadButton.x,
+				this.scene.downloadButton.y
+			);
+
+			// Store base scale for tweening
+			this.scene.downloadButton.baseScale = buttonScale;
+			this.scene.downloadText.baseScale = textScale / 12;
+
+			// Store footer height
+			this.scene.footerHeight = this.scene.footerImage.displayHeight;
+		};
+
+		// Initial draw
+		drawFooter();
+
+		// Redraw on resize
+		this.scene.scale.on("resize", drawFooter, this);
+
+		// Pulse animations
+		this.startPulseTween(
+			this.scene.downloadButton,
+			() => this.scene.downloadButton.baseScale
+		);
+		this.startPulseTween(
+			this.scene.downloadText,
+			() => this.scene.downloadText.baseScale
+		);
+	}
+
+	startPulseTween(target, getBaseScale) {
+		if (target.pulseTween) return;
+
+		target.pulseTween = this.scene.tweens.add({
+			targets: target,
+			scaleX: {
+				getStart: getBaseScale,
+				getEnd: () => getBaseScale() * 1.12,
+			},
+			scaleY: {
+				getStart: getBaseScale,
+				getEnd: () => getBaseScale() * 1.12,
+			},
+			yoyo: true,
+			repeat: -1,
+			duration: 500,
+			ease: "Sine.easeInOut",
+		});
+	}
 }

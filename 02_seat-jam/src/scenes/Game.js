@@ -43,97 +43,6 @@ export class Game extends Phaser.Scene {
 		onAudioVolumeChange(this.scene);
 	}
 
-	createFooter() {
-		this.footerImage = this.add.image(0, 0, "footer").setOrigin(0.5, 1);
-		this.downloadButton = this.add.image(0, 0, "button").setOrigin(0.5);
-		this.downloadText = this.add
-			.text(0, 0, "DOWNLOAD", {
-				fontFamily: "MADE Tommy Soft",
-				fontSize: "24px",
-				color: "#ffffff",
-				fontFamily: "Arial",
-				fontStyle: "bold",
-				align: "center",
-				stroke: "#000000",
-				strokeThickness: 2,
-			})
-			.setOrigin(0.5);
-
-		const drawFooter = () => {
-			const { width: canvasWidth, height: canvasHeight } = this.scale;
-
-			// Footer scaling
-			const scaleX = canvasWidth / this.footerImage.width;
-			const scaleY = scaleX;
-			this.footerImage.setScale(scaleX, scaleY);
-			this.footerImage.setPosition(canvasWidth / 2, canvasHeight);
-
-			// Download Button scaling
-			const footerWidth = this.footerImage.displayWidth;
-			const footerHeight = this.footerImage.displayHeight;
-			const buttonTargetHeight = footerHeight * 0.61;
-			const buttonScale = buttonTargetHeight / this.downloadButton.height;
-
-			const buttonPadding = 20 * buttonScale;
-			this.downloadButton.setScale(buttonScale);
-			this.downloadButton.setPosition(
-				this.footerImage.x +
-					footerWidth / 2 -
-					this.downloadButton.displayWidth / 2 -
-					5 * 20 * buttonScale,
-				this.footerImage.y - footerHeight / 2 + 20 * buttonScale
-			);
-
-			// Text scaling
-			const textScale = Math.max(buttonTargetHeight * 0.2, 12);
-			this.downloadText.setFontSize(textScale);
-			this.downloadText.setPosition(
-				this.downloadButton.x,
-				this.downloadButton.y
-			);
-
-			// Store base scale for tweening
-			this.downloadButton.baseScale = buttonScale;
-			this.downloadText.baseScale = textScale / 12;
-
-			// Store footer height
-			this.footerHeight = this.footerImage.displayHeight;
-		};
-
-		// Initial draw
-		drawFooter();
-
-		// Redraw on resize
-		this.scale.on("resize", drawFooter, this);
-
-		// Pulse animations
-		this.startPulseTween(
-			this.downloadButton,
-			() => this.downloadButton.baseScale
-		);
-		this.startPulseTween(this.downloadText, () => this.downloadText.baseScale);
-	}
-
-	startPulseTween(target, getBaseScale) {
-		if (target.pulseTween) return;
-
-		target.pulseTween = this.tweens.add({
-			targets: target,
-			scaleX: {
-				getStart: getBaseScale,
-				getEnd: () => getBaseScale() * 1.12,
-			},
-			scaleY: {
-				getStart: getBaseScale,
-				getEnd: () => getBaseScale() * 1.12,
-			},
-			yoyo: true,
-			repeat: -1,
-			duration: 500,
-			ease: "Sine.easeInOut",
-		});
-	}
-
 	createMovesBox() {
 		// Moves box and text
 		this.movesBox = this.add.image(0, 0, "movesBox").setOrigin(1, 0);
@@ -536,7 +445,7 @@ export class Game extends Phaser.Scene {
 		gameUI.createMovesBox();
 		this.createMainScene();
 		this.createInvisibleGrid();
-		this.createFooter();
+		gameUI.createFooter();
 	}
 
 	loadModels() {
