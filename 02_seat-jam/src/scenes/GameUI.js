@@ -55,7 +55,7 @@ export class GameUI {
 		drawNavbar();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawNavbar, this);
+		this.scene.scale.on("resize", drawNavbar, this.scene);
 	}
 
 	createMovesBox() {
@@ -107,7 +107,7 @@ export class GameUI {
 		drawMovesBox();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawMovesBox, this);
+		this.scene.scale.on("resize", drawMovesBox, this.scene);
 	}
 
 	createFooter() {
@@ -206,5 +206,40 @@ export class GameUI {
 			duration: 500,
 			ease: "Sine.easeInOut",
 		});
+	}
+
+	createMainScene() {
+		this.scene.mainSceneBg = this.scene.add
+			.image(0, 0, "busWithTrack")
+			.setOrigin(0.5);
+		this.scene.mainSceneBg.setDepth(-1);
+
+		const drawMainScene = () => {
+			const { width: canvasWidth, height: canvasHeight } = this.scene.scale;
+
+			const navHeight = this.scene.navbarHeight || 50;
+			const footerHeight = this.scene.footerImage?.displayHeight || 100;
+
+			const availableHeight = canvasHeight - navHeight - footerHeight;
+
+			const scaleX = canvasWidth / this.scene.mainSceneBg.width;
+			const scaleY = availableHeight / this.scene.mainSceneBg.height;
+
+			const minScale = 0.6;
+
+			let scale = Math.min(scaleX, scaleY);
+			scale = Math.max(scale, minScale);
+
+			this.scene.mainSceneBg.setScale(scale);
+
+			this.scene.mainSceneBg.x = canvasWidth / 2;
+			this.scene.mainSceneBg.y = navHeight + availableHeight / 2;
+		};
+
+		// Initial draw
+		drawMainScene();
+
+		// Redraw on resize
+		this.scene.scale.on("resize", drawMainScene, this.scene);
 	}
 }

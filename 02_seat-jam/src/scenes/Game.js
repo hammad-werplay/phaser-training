@@ -93,39 +93,6 @@ export class Game extends Phaser.Scene {
 		this.scale.on("resize", drawMovesBox, this);
 	}
 
-	createMainScene() {
-		this.mainSceneBg = this.add.image(0, 0, "busWithTrack").setOrigin(0.5);
-		this.mainSceneBg.setDepth(-1);
-
-		const drawMainScene = () => {
-			const { width: canvasWidth, height: canvasHeight } = this.scale;
-
-			const navHeight = this.navbarHeight || 50;
-			const footerHeight = this.footerImage?.displayHeight || 100;
-
-			const availableHeight = canvasHeight - navHeight - footerHeight;
-
-			const scaleX = canvasWidth / this.mainSceneBg.width;
-			const scaleY = availableHeight / this.mainSceneBg.height;
-
-			const minScale = 0.6;
-
-			let scale = Math.min(scaleX, scaleY);
-			scale = Math.max(scale, minScale);
-
-			this.mainSceneBg.setScale(scale);
-
-			this.mainSceneBg.x = canvasWidth / 2;
-			this.mainSceneBg.y = navHeight + availableHeight / 2;
-		};
-
-		// Initial draw
-		drawMainScene();
-
-		// Redraw on resize
-		this.scale.on("resize", drawMainScene, this);
-	}
-
 	createInvisibleGrid() {
 		this.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.pathFinder = new PathFinder(this.grid);
@@ -443,7 +410,7 @@ export class Game extends Phaser.Scene {
 		const gameUI = new GameUI(this);
 		gameUI.createNavbar();
 		gameUI.createMovesBox();
-		this.createMainScene();
+		gameUI.createMainScene();
 		this.createInvisibleGrid();
 		gameUI.createFooter();
 	}
