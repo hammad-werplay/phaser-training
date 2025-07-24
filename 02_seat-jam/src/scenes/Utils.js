@@ -25,26 +25,44 @@ export class Utils {
 	 */
 
 	static createGameScenario() {
-		// [
-		//       { seat: "A3", position: [0, 0] },
-		//       { seat: "B1", position: [2, 0] },
-		//       { seat: "A1", position: [3, 0] },
-		//       { seat: "A2", position: [5, 0] },
-		//       { seat: "A4", position: [4, 1] },
-		//       { seat: "B2", position: [4, 2] },
-		//       { seat: "B3", position: [3, 3] },
-		//       { seat: "B4", position: [1, 2] },
-		//     ];
+		const scenarios = [
+			[
+				{ seat: "A1", position: [4, 1] },
+				{ seat: "A2", position: [2, 2] },
+				{ seat: "A3", position: [0, 3] },
+				{ seat: "A4", position: [5, 0] },
+				{ seat: "B1", position: [1, 1] },
+				{ seat: "B2", position: [3, 3] },
+				{ seat: "B3", position: [4, 0] },
+				{ seat: "B4", position: [2, 0] },
+			],
+			[
+				{ seat: "A1", position: [0, 0] },
+				{ seat: "A2", position: [3, 0] },
+				{ seat: "A3", position: [4, 0] },
+				{ seat: "A4", position: [2, 3] },
+				{ seat: "B1", position: [5, 1] },
+				{ seat: "B2", position: [3, 2] },
+				{ seat: "B3", position: [3, 3] },
+				{ seat: "B4", position: [1, 2] },
+			],
+		];
+
 		const robotPositions = [
-			{ seat: "A1", position: [0, 0] },
-			{ seat: "A2", position: [3, 0] },
-			{ seat: "A3", position: [4, 0] },
-			{ seat: "A4", position: [2, 3] },
-			{ seat: "B1", position: [5, 1] },
-			{ seat: "B2", position: [3, 2] },
+			{ seat: "A3", position: [0, 0] },
+			{ seat: "B1", position: [2, 0] },
+			{ seat: "A1", position: [3, 0] },
+			{ seat: "A2", position: [5, 0] },
+			{ seat: "A4", position: [4, 1] },
+			{ seat: "B2", position: [4, 2] },
 			{ seat: "B3", position: [3, 3] },
 			{ seat: "B4", position: [1, 2] },
 		];
+
+		// Step 1: Decide the seats location (No random)
+		// Step 2: Decide the robots location (Random)
+		// Step 2.1: Test whether robots can go to the seats
+		// Step 3: Return the robotPositions with the seats and positions
 
 		return robotPositions;
 	}
