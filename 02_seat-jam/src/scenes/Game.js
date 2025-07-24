@@ -5,6 +5,7 @@ import GUI from "lil-gui";
 import { adStart, onCtaPressed, onAudioVolumeChange } from "../networkPlugin";
 import { Grid, PathFinder } from "./Mechanics.js";
 import { Robot } from "./Robot.js";
+import { Utils } from "./Utils.js";
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
@@ -422,7 +423,7 @@ export class Game extends Phaser.Scene {
 					// Add angry emotion from robot position
 					const worldPos = this.startCell.robotObject.robot.position.clone();
 					worldPos.y += 1.3;
-					const screen = this.worldToScreen(
+					const screen = Utils.worldToScreen(
 						worldPos,
 						this.camera,
 						this.threeRenderer.domElement
@@ -482,7 +483,7 @@ export class Game extends Phaser.Scene {
 							worldPos.x += end.col === 2 ? 0.2 : -0.2;
 							worldPos.y += 1.3;
 
-							const screen = this.worldToScreen(
+							const screen = Utils.worldToScreen(
 								worldPos,
 								this.camera,
 								this.threeRenderer.domElement
@@ -532,17 +533,6 @@ export class Game extends Phaser.Scene {
 		});
 	}
 
-	worldToScreen(position, camera, rendererDom) {
-		const projected = position.clone().project(camera);
-
-		const width = rendererDom.clientWidth;
-		const height = rendererDom.clientHeight;
-
-		const x = ((projected.x + 1) / 2) * width;
-		const y = ((-projected.y + 1) / 2) * height;
-
-		return { x, y };
-	}
 	movePlayerAlongPath(path, onComplete) {
 		if (!path || path.length === 0) {
 			console.error("No path found");
@@ -761,41 +751,40 @@ export class Game extends Phaser.Scene {
 				.setDepth(10001)
 				.setScale(0.7);
 
-				const centerX = width / 2 - 100;
-				const baseY = height / 2 - 280;
-	
-				const word1 = this.add
-					.text(0, 0, "EVERYONE ", {
-						fontSize: "36px",
-						color: "#fff",
-						fontStyle: "bold",
-						stroke: "#000",
-						strokeThickness: 6,
-					})
-					.setOrigin(0, 0.5);
-	
-				const word2 = this.add
-					.text(word1.width, 0, "SEATED!", {
-						fontSize: "36px",
-						color: "#00ff00", // green
-						fontStyle: "bold",
-						stroke: "#000",
-						strokeThickness: 6,
-					})
-					.setOrigin(0, 0.5);
+			const centerX = width / 2 - 100;
+			const baseY = height / 2 - 280;
 
-	
-				word1.setPosition(0, 0);
-				word2.setPosition(20, word1.height);
-					
-				this.gameOverText = this.add
-					.container(centerX, baseY, [word1, word2])
-					.setDepth(10002)
-					.setSize(
-						Math.max(word1.width, word2.width),
-						word1.height + word2.height
+			const word1 = this.add
+				.text(0, 0, "EVERYONE ", {
+					fontSize: "36px",
+					color: "#fff",
+					fontStyle: "bold",
+					stroke: "#000",
+					strokeThickness: 6,
+				})
+				.setOrigin(0, 0.5);
+
+			const word2 = this.add
+				.text(word1.width, 0, "SEATED!", {
+					fontSize: "36px",
+					color: "#00ff00", // green
+					fontStyle: "bold",
+					stroke: "#000",
+					strokeThickness: 6,
+				})
+				.setOrigin(0, 0.5);
+
+			word1.setPosition(0, 0);
+			word2.setPosition(20, word1.height);
+
+			this.gameOverText = this.add
+				.container(centerX, baseY, [word1, word2])
+				.setDepth(10002)
+				.setSize(
+					Math.max(word1.width, word2.width),
+					word1.height + word2.height
 				);
-			
+
 			this.createDownloadBtn();
 
 			// Stop all input and update logic
