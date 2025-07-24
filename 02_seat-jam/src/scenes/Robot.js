@@ -179,8 +179,95 @@ export class Robot {
 		return this.robot;
 	}
 
-	static transformRobotHead = (robotObject, toSelected = true) => {
-		const head = robotObject.robot.getObjectByName("Head");
+	showEmotionSpriteAboveRobot(emotion, scene) {
+		let emotionTexture;
+
+		if (scene.textures.exists(emotion)) {
+			const src = scene.textures.get(emotion).getSourceImage().src;
+			emotionTexture = new THREE.TextureLoader().load(src);
+		} else {
+			console.error(`${emotion} texture not found in Phaser cache`);
+			return;
+		}
+
+		const emotionMaterial = new THREE.SpriteMaterial({
+			map: emotionTexture,
+			transparent: true,
+			depthTest: false,
+			depthWrite: false,
+			opacity: 0
+		});
+
+		const emotionSprite = new THREE.Sprite(emotionMaterial);
+		emotionSprite.scale.set(0.13, 0.13, 0.13);
+
+		// Position above the robot's head
+		const robotObj = this;
+		const robotPos = robotObj.robot.position.clone();
+
+		emotionSprite.position.copy(robotPos);
+		emotionSprite.position.y += 0.5;
+		// Always face the camera
+		emotionSprite.onBeforeRender = (renderer, scene, camera) => {
+			emotionSprite.quaternion.copy(camera.quaternion);
+		};
+		
+		scene.threeScene.add(emotionSprite);
+
+		// Animate: fade in, hold, fade out, then remove
+		let elapsed = 0;
+		let phase = 0; // 0: fade in, 1: hold, 2: fade out
+		const fadeInDuration = 300;
+		const holdDuration = 400;
+		const fadeOutDuration = 800;
+		const startScale = 0.1;
+		const endScale = 0.4;
+
+		emotionSprite.scale.set(startScale, startScale, startScale);
+
+		const animateAngry = (time, delta) => {
+			// delta is in ms
+			elapsed += delta;
+			if (phase === 0) {
+				// Fade in
+				const t = Math.min(elapsed / fadeInDuration, 1);
+				emotionSprite.material.opacity = t;
+				const scale = startScale + (endScale - startScale) * t;
+				emotionSprite.scale.set(scale, scale, scale);
+				if (t >= 1) {
+					phase = 1;
+					elapsed = 0;
+				}
+			} else if (phase === 1) {
+				// Hold
+				emotionSprite.material.opacity = 1;
+				emotionSprite.scale.set(endScale, endScale, endScale);
+				if (elapsed >= holdDuration) {
+					phase = 2;
+					elapsed = 0;
+				}
+			} else if (phase === 2) {
+				// Fade out
+				const t = Math.min(elapsed / fadeOutDuration, 1);
+				emotionSprite.material.opacity = 1 - t;
+				const scale = endScale - (endScale - startScale) * t;
+				emotionSprite.scale.set(scale, scale, scale);
+				if (t >= 1) {
+					scene.threeScene.remove(emotionSprite);
+					emotionSprite.material.dispose();
+					emotionTexture.dispose();
+					scene.events.off('update', animateAngry);
+				}
+			}
+		};
+
+		// Listen to the scene's update event (Phaser's event emitter)
+		scene.events.on('update', animateAngry);
+		
+	}
+
+	transformRobotHead(toSelected = true) {
+		const head = this.robot.getObjectByName("Head");
 		if (head) {
 			head.traverse((child) => {
 				if (child.isMesh) {

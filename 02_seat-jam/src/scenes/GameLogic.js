@@ -132,17 +132,17 @@ export class GameLogic {
 				if (!this.scene.startCell) {
 					this.scene.startCell = clickedBox;
 					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
-					Robot.transformRobotHead(clickedBox.robotObject, true);
+					clickedBox.robotObject.transformRobotHead(true);
 					return;
 				}
 
 				const endCell = clickedBox;
 
 				if (this.scene.startCell && endCell.robot && endCell.robotObject) {
-					Robot.transformRobotHead(this.scene.startCell.robotObject, false);
+					this.scene.startCell.robotObject.transformRobotHead(false);
 					this.scene.startCell.robotObject.playAnimation();
 					this.scene.startCell = endCell;
-					Robot.transformRobotHead(endCell.robotObject, true);
+					endCell.robotObject.transformRobotHead(true);
 					return;
 				}
 
@@ -158,44 +158,10 @@ export class GameLogic {
 
 				if (!path) {
 					console.error("No path found");
-					this.scene.startCell.robotObject.playAnimation();
-
-					// Add angry emotion from robot position
-					const worldPos =
-						this.scene.startCell.robotObject.robot.position.clone();
-					worldPos.y += 1.3;
-					const screen = Utils.worldToScreen(
-						worldPos,
-						this.scene.camera,
-						this.scene.threeRenderer.domElement
-					);
-
-					const angryImage = this.scene.add.image(screen.x, screen.y, "angry");
-					angryImage.setOrigin(0.5);
-					angryImage.setScale(0.12);
-					angryImage.setDepth(1000);
-					this.scene.tweens.add({
-						targets: angryImage,
-						alpha: { from: 0, to: 1 },
-						scale: { from: 0, to: 0.13 },
-						duration: 300,
-						yoyo: true,
-						hold: 400,
-						ease: "Back.Out",
-						onYoyo: () => {
-							this.scene.tweens.add({
-								targets: angryImage,
-								alpha: 0,
-								scale: 0.1,
-								duration: 800,
-								ease: "Expo.easeIn",
-								onComplete: () => angryImage.destroy(),
-							});
-						},
-					});
-
-					Robot.transformRobotHead(this.scene.startCell.robotObject, false);
-
+					const robotObject = this.scene.startCell.robotObject;
+					robotObject.playAnimation();
+					robotObject.transformRobotHead(false);
+					robotObject.showEmotionSpriteAboveRobot('angry', this.scene);
 					this.scene.startCell = null;
 					return;
 				}
@@ -207,7 +173,7 @@ export class GameLogic {
 					start.robotObject.playAnimation();
 					const cellToLookDown = this.scene.grid.getCell(end.row + 1, end.col);
 					end.robotObject.lookDown(cellToLookDown);
-					Robot.transformRobotHead(end.robotObject, false);
+					end.robotObject.transformRobotHead(false);
 
 					if (end.type === "seat") {
 						const cellToLookDown = this.scene.grid.getCell(
@@ -219,49 +185,10 @@ export class GameLogic {
 
 						if (isSeatCorrect) {
 							end.robotObject.isSeatedCorrectly = true;
-							
-							// Add a smile image above the robot
-							const worldPos = end.robotObject.robot.position.clone();
-							worldPos.x += end.col === 2 ? 0.2 : -0.2;
-							worldPos.y += 1.3;
-
-							const screen = Utils.worldToScreen(
-								worldPos,
-								this.scene.camera,
-								this.scene.threeRenderer.domElement
-							);
-
-							const smileImage = this.scene.add.image(
-								screen.x,
-								screen.y,
-								"smile"
-							);
-							smileImage.setOrigin(0.5);
-							smileImage.setScale(0.12);
-							smileImage.setDepth(1000);
-
-							this.scene.tweens.add({
-								targets: smileImage,
-								alpha: { from: 0, to: 1 },
-								scale: { from: 0, to: 0.13 },
-								duration: 300,
-								yoyo: true,
-								hold: 400,
-								ease: "Back.Out",
-								onYoyo: () => {
-									this.scene.tweens.add({
-										targets: smileImage,
-										alpha: 0,
-										scale: 0.1,
-										duration: 800,
-										ease: "Expo.easeIn",
-										onComplete: () => smileImage.destroy(),
-									});
-								},
-							});
+							end.robotObject.showEmotionSpriteAboveRobot('smile', this.scene);
 						} else {
 							end.robotObject.isSeatedCorrectly = false;
-							// Add a sad image above the robot
+							end.robotObject.showEmotionSpriteAboveRobot('angry', this.scene);
 						}
 					}
 
