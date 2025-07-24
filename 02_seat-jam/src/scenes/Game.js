@@ -7,6 +7,7 @@ import { Grid, PathFinder } from "./Mechanics.js";
 import { Robot } from "./Robot.js";
 import { Utils } from "./Utils.js";
 import { GameUI } from "./GameUI.js";
+import { GameLogic } from "./GameLogic.js";
 export class Game extends Phaser.Scene {
 	constructor() {
 		super("Game");
@@ -41,56 +42,6 @@ export class Game extends Phaser.Scene {
 
 		// This is required for MRAID networks, you can remove if you are not using MRAID
 		onAudioVolumeChange(this.scene);
-	}
-
-	createMovesBox() {
-		// Moves box and text
-		this.movesBox = this.add.image(0, 0, "movesBox").setOrigin(1, 0);
-		this.moveCountText = this.add
-			.text(0, 0, this.movesLeft, {
-				fontFamily: "MADE Tommy Soft",
-				fontSize: "64px",
-				color: "#ffffff",
-				fontStyle: "bold",
-				align: "center",
-				stroke: "#000000",
-				strokeThickness: 2,
-			})
-			.setOrigin(0.5);
-
-		const drawMovesBox = () => {
-			const padding = 10;
-			const canvasWidth = this.scale.width;
-			const navBarHeight = this.navbarHeight || 50;
-
-			// Moves box scaling
-			const boxScale = canvasWidth < 450 ? 0.33 : 0.7;
-			this.movesBox.setScale(boxScale);
-
-			// Position: top-right under navbar
-			this.movesBox.x = canvasWidth;
-			this.movesBox.y = navBarHeight + padding;
-
-			// Responsive font size
-			const maxFontSize = this.movesBox.displayHeight * 0.5;
-			const finalFontSize = Math.min(40, maxFontSize);
-
-			this.moveCountText.setStyle({
-				fontSize: `${Math.floor(finalFontSize)}px`,
-			});
-
-			// Center text inside box
-			this.moveCountText.setPosition(
-				this.movesBox.x - this.movesBox.displayWidth / 2 + 15,
-				this.movesBox.y + this.movesBox.displayHeight / 2
-			);
-		};
-
-		// Initial draw
-		drawMovesBox();
-
-		// Redraw on resize
-		this.scale.on("resize", drawMovesBox, this);
 	}
 
 	createInvisibleGrid() {
@@ -406,40 +357,6 @@ export class Game extends Phaser.Scene {
 		step();
 	}
 
-	initializeScene() {
-		this.gameUI.createNavbar();
-		this.gameUI.createMovesBox();
-		this.gameUI.createMainScene();
-		this.createInvisibleGrid();
-		this.gameUI.createFooter();
-	}
-
-	loadModels() {
-		const robotModelRef = this.loadedModels.Robot.object;
-		if (!robotModelRef) {
-			console.error("Robot model not loaded or missing object");
-			return;
-		}
-
-		const robotPositions = [
-			{ seat: "A3", position: [0, 0] },
-			{ seat: "B1", position: [2, 0] },
-			{ seat: "A1", position: [3, 0] },
-			{ seat: "A2", position: [5, 0] },
-			{ seat: "A4", position: [4, 1] },
-			{ seat: "B2", position: [4, 2] },
-			{ seat: "B3", position: [3, 3] },
-			{ seat: "B4", position: [1, 2] },
-		];
-
-		this.robots = robotPositions.map(({ seat, position }) => {
-			const cell = this.grid.getCell(position[0], position[1]);
-			const robotModel = new Robot(robotModelRef);
-			robotModel.attachTo(cell, this.threeScene, undefined, seat);
-			return robotModel;
-		});
-	}
-
 	setupThreeJS() {
 		// Canvas for ThreeJS
 		this.threeCanvas = document.createElement("canvas");
@@ -508,159 +425,15 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera);
 	}
 
-	checkWin() {
-		// If all robots are in their correct seats, show the success image
-		// Check if all seat cells have the correct robot label
-		if (
-			!this.gameWon &&
-			this.grid &&
-			this.grid.cells &&
-			this.grid.cells
-				.flat()
-				.filter((cell) => cell.type === "seat")
-				.every(
-					(cell) =>
-						cell.robotObject &&
-						typeof cell.verifyCorrectSeatLabel === "function" &&
-						cell.verifyCorrectSeatLabel()
-				)
-		) {
-			const { width, height } = this.sys.game.canvas;
-
-			// Create a semi-transparent overlay
-			this.successOverlay = this.add
-				.rectangle(0, 0, width, height, 0x000000, 0.7)
-				.setOrigin(0)
-				.setDepth(10000);
-
-			// Center the happy character image
-			this.successCharacterImage = this.add
-				.image(width / 2, height / 2 - 50, "happyCharacter")
-				.setOrigin(0.5)
-				.setDepth(10001)
-				.setScale(0.7);
-
-			const centerX = width / 2 - 100;
-			const baseY = height / 2 - 280;
-
-			const word1 = this.add
-				.text(0, 0, "EVERYONE ", {
-					fontSize: "36px",
-					color: "#fff",
-					fontStyle: "bold",
-					stroke: "#000",
-					strokeThickness: 6,
-				})
-				.setOrigin(0, 0.5);
-
-			const word2 = this.add
-				.text(word1.width, 0, "SEATED!", {
-					fontSize: "36px",
-					color: "#00ff00", // green
-					fontStyle: "bold",
-					stroke: "#000",
-					strokeThickness: 6,
-				})
-				.setOrigin(0, 0.5);
-
-			word1.setPosition(0, 0);
-			word2.setPosition(20, word1.height);
-
-			this.gameOverText = this.add
-				.container(centerX, baseY, [word1, word2])
-				.setDepth(10002)
-				.setSize(
-					Math.max(word1.width, word2.width),
-					word1.height + word2.height
-				);
-
-			this.gameUI.createDownloadBtn();
-
-			// Stop all input and update logic
-			this.gameWon = true;
-			this.threeCanvas.style.zIndex = "-1";
-			return;
-		}
-	}
-
-	checkLoss() {
-		if (this.movesLeft <= 0 && !this.gameOverShown && !this.gameWon) {
-			this.gameOverShown = true;
-
-			// Create overlay
-			const { width, height } = this.sys.game.canvas;
-			this.gameOverOverlay = this.add
-				.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
-				.setOrigin(0.5)
-				.setDepth(10000);
-
-			this.failedCharactersImage = this.add
-				.image(width / 2, height / 2, "failedCharacters")
-				.setOrigin(0.5)
-				.setScale(0.7)
-				.setDepth(10001);
-
-			const centerX = width / 2 - 100;
-			const baseY = height / 2 - 280;
-
-			const word1 = this.add
-				.text(0, 0, "EVERYONE ", {
-					fontSize: "36px",
-					color: "#fff",
-					fontStyle: "bold",
-					stroke: "#000",
-					strokeThickness: 6,
-				})
-				.setOrigin(0, 0.5);
-
-			const word2 = this.add
-				.text(word1.width, 0, "NOT", {
-					fontSize: "36px",
-					color: "#ff0000", // red
-					fontStyle: "bold",
-					stroke: "#000",
-					strokeThickness: 6,
-				})
-				.setOrigin(0, 0.5);
-
-			const word3 = this.add
-				.text(word1.width + word2.width, 0, " SEATED", {
-					fontSize: "36px",
-					color: "#fff",
-					fontStyle: "bold",
-					stroke: "#000",
-					strokeThickness: 6,
-				})
-				.setOrigin(0, 0.5);
-
-			word1.setPosition(0, 0);
-			word2.setPosition(50, word1.height);
-			word3.setPosition(0, word1.height + word2.height);
-
-			this.gameOverText = this.add
-				.container(centerX, baseY, [word1, word2, word3])
-				.setDepth(10002)
-				.setSize(
-					Math.max(word1.width, word2.width, word3.width),
-					word1.height + word2.height + word3.height
-				);
-
-			this.gameUI.createDownloadBtn();
-
-			this.threeCanvas.style.zIndex = "-1";
-		}
-	}
-
 	create() {
 		this.adNetworkSetup();
 
 		this.loadedModels = this.registry.get("loadedModels");
-
-		this.gameUI = new GameUI(this);
-
 		this.setupThreeJS();
-		this.initializeScene();
-		this.loadModels();
+
+		this.gameLogic = new GameLogic(this);
+
+		this.gameLogic.startGame();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
@@ -672,8 +445,8 @@ export class Game extends Phaser.Scene {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
 
-			this.checkWin();
-			this.checkLoss();
+			this.gameLogic.checkWin();
+			this.gameLogic.checkLoss();
 
 			this.robots.forEach((robot) => {
 				if (robot.mixer) {

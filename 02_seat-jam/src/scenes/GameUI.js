@@ -1,3 +1,5 @@
+import { Robot } from "./Robot";
+
 export class GameUI {
 	constructor(scene) {
 		this.scene = scene;
@@ -288,5 +290,31 @@ export class GameUI {
 
 		// Add a glow effect to the button text for a modern look
 		downloadText.setShadow(0, 0, "#00ffff", 16, true, true);
+	}
+
+	loadModels() {
+		const robotModelRef = this.scene.loadedModels.Robot.object;
+		if (!robotModelRef) {
+			console.error("Robot model not loaded or missing object");
+			return;
+		}
+
+		const robotPositions = [
+			{ seat: "A3", position: [0, 0] },
+			{ seat: "B1", position: [2, 0] },
+			{ seat: "A1", position: [3, 0] },
+			{ seat: "A2", position: [5, 0] },
+			{ seat: "A4", position: [4, 1] },
+			{ seat: "B2", position: [4, 2] },
+			{ seat: "B3", position: [3, 3] },
+			{ seat: "B4", position: [1, 2] },
+		];
+
+		this.scene.robots = robotPositions.map(({ seat, position }) => {
+			const cell = this.scene.grid.getCell(position[0], position[1]);
+			const robotModel = new Robot(robotModelRef);
+			robotModel.attachTo(cell, this.scene.threeScene, undefined, seat);
+			return robotModel;
+		});
 	}
 }
