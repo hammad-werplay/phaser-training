@@ -407,12 +407,11 @@ export class Game extends Phaser.Scene {
 	}
 
 	initializeScene() {
-		const gameUI = new GameUI(this);
-		gameUI.createNavbar();
-		gameUI.createMovesBox();
-		gameUI.createMainScene();
+		this.gameUI.createNavbar();
+		this.gameUI.createMovesBox();
+		this.gameUI.createMainScene();
 		this.createInvisibleGrid();
-		gameUI.createFooter();
+		this.gameUI.createFooter();
 	}
 
 	loadModels() {
@@ -575,7 +574,7 @@ export class Game extends Phaser.Scene {
 					word1.height + word2.height
 				);
 
-			this.createDownloadBtn();
+			this.gameUI.createDownloadBtn();
 
 			// Stop all input and update logic
 			this.gameWon = true;
@@ -646,63 +645,18 @@ export class Game extends Phaser.Scene {
 					word1.height + word2.height + word3.height
 				);
 
-			this.createDownloadBtn();
+			this.gameUI.createDownloadBtn();
 
 			this.threeCanvas.style.zIndex = "-1";
 		}
-	}
-
-	createDownloadBtn() {
-		const { width, height } = this.sys.game.canvas;
-
-		const downloadBtn = this.add
-			.image(width / 2, height - this.footerHeight / 2 - 80, "button")
-			.setOrigin(0.5)
-			.setScale(0.7)
-			.setDepth(10001)
-			.setInteractive();
-
-		const downloadText = this.add
-			.text(width / 2, height - this.footerHeight / 2 - 80, "DOWNLOAD", {
-				fontFamily: "MADE Tommy Soft",
-				fontSize: "24px",
-				color: "#ffffff",
-				fontStyle: "bold",
-				align: "center",
-				stroke: "#000000",
-				strokeThickness: 2,
-			})
-			.setOrigin(0.5)
-			.setDepth(10002)
-			.setOrigin(0.5);
-
-		this.tweens.add({
-			targets: [downloadBtn, downloadText],
-			scaleX: { from: 0.7, to: 0.78 },
-			scaleY: { from: 0.7, to: 0.78 },
-			yoyo: true,
-			repeat: -1,
-			duration: 1200,
-			ease: "Sine.easeInOut",
-		});
-
-		this.tweens.add({
-			targets: [downloadBtn, downloadText],
-			y: "+=8",
-			yoyo: true,
-			repeat: -1,
-			duration: 1800,
-			ease: "Sine.easeInOut",
-		});
-
-		// Add a glow effect to the button text for a modern look
-		downloadText.setShadow(0, 0, "#00ffff", 16, true, true);
 	}
 
 	create() {
 		this.adNetworkSetup();
 
 		this.loadedModels = this.registry.get("loadedModels");
+
+		this.gameUI = new GameUI(this);
 
 		this.setupThreeJS();
 		this.initializeScene();

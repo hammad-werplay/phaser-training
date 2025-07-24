@@ -242,4 +242,51 @@ export class GameUI {
 		// Redraw on resize
 		this.scene.scale.on("resize", drawMainScene, this.scene);
 	}
+
+	createDownloadBtn() {
+		const { width, height } = this.scene.sys.game.canvas;
+
+		const downloadBtn = this.scene.add
+			.image(width / 2, height - this.scene.footerHeight / 2 - 80, "button")
+			.setOrigin(0.5)
+			.setScale(0.7)
+			.setDepth(10001)
+			.setInteractive();
+
+		const downloadText = this.scene.add
+			.text(width / 2, height - this.scene.footerHeight / 2 - 80, "DOWNLOAD", {
+				fontFamily: "MADE Tommy Soft",
+				fontSize: "24px",
+				color: "#ffffff",
+				fontStyle: "bold",
+				align: "center",
+				stroke: "#000000",
+				strokeThickness: 2,
+			})
+			.setOrigin(0.5)
+			.setDepth(10002)
+			.setOrigin(0.5);
+
+		this.scene.tweens.add({
+			targets: [downloadBtn, downloadText],
+			scaleX: { from: 0.7, to: 0.78 },
+			scaleY: { from: 0.7, to: 0.78 },
+			yoyo: true,
+			repeat: -1,
+			duration: 1200,
+			ease: "Sine.easeInOut",
+		});
+
+		this.scene.tweens.add({
+			targets: [downloadBtn, downloadText],
+			y: "+=8",
+			yoyo: true,
+			repeat: -1,
+			duration: 1800,
+			ease: "Sine.easeInOut",
+		});
+
+		// Add a glow effect to the button text for a modern look
+		downloadText.setShadow(0, 0, "#00ffff", 16, true, true);
+	}
 }
