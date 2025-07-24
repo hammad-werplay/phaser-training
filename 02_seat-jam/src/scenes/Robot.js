@@ -14,6 +14,7 @@ export class Robot {
 		});
 		this.nameLabel;
 		this.robotLabel;
+		this.isSeatedCorrectly = false;
 	}
 
 	playAnimation(name = "RobotArmature|Robot_Idle") {
@@ -27,8 +28,6 @@ export class Robot {
 		Object.values(this.animationsByName).forEach((a) => {
 			if (a !== action) a.stop();
 		});
-
-		console.log(`Playing animation: ${name}`);
 
 		action.reset();
 		if (name.includes("Sitting")) {
@@ -72,8 +71,8 @@ export class Robot {
 		cell.isBlocked = true;
 
 		scene.add(this.robot);
-
 		this.nameLabel = this.createNameLabel(labelText);
+		this.isSeatedCorrectly = this.isInCorrectSeat(cell.seatLabel);
 		scene.add(this.nameLabel);
 	}
 
@@ -114,7 +113,7 @@ export class Robot {
 		canvas.height = 128;
 
 		context.font = "24px Arial";
-		context.fillStyle = "black";
+		context.fillStyle = "#fff";
 		context.textAlign = "center";
 		context.fillText(text, canvas.width / 2, canvas.height / 2);
 
@@ -135,9 +134,46 @@ export class Robot {
 	}
 
 	isInCorrectSeat(correctSeat) {
-		console.log(this.robotLabel, correctSeat);
 		return this.robotLabel === correctSeat;
 	}
+
+	get isSeatedCorrectly() {
+		return this.isSeatedCorrectly;
+	}
+
+	set isSeatedCorrectly(value) {
+		this._isSeatedCorrectly = value;
+
+		if (value) {
+			this.playAnimation("RobotArmature|Robot_Sitting");
+			this.changeRobotColor(value);
+		} else {
+			this.playAnimation("RobotArmature|Robot_Idle");
+			this.changeRobotColor(false);
+		}
+	}
+
+	changeRobotColor(isSeated) {
+		this.robot.traverse((child) => {
+			if (child.isMesh && child.material && child.material.color) {
+				if (!child.userData._clonedMaterial) {
+					const cloned = child.material.clone();
+					child.userData._clonedMaterial = true;
+					child.userData._originalColor = cloned.color.clone(); 
+					child.material = cloned;
+				}
+	
+				if (isSeated) {
+					child.material.color.set(0x00ff00); 
+				} else {
+					if (child.userData._originalColor) {
+						child.material.color.copy(child.userData._originalColor);
+					}
+				}
+			}
+		});
+	}
+	
 
 	getModel() {
 		return this.robot;

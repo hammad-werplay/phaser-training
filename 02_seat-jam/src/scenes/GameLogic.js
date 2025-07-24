@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GameUI } from "./GameUI";
 import { Grid, PathFinder } from "./Mechanics.js";
 import { Robot } from "./Robot.js";
+import { Utils } from "./Utils";
 
 export class GameLogic {
 	constructor(scene) {
@@ -214,13 +215,11 @@ export class GameLogic {
 							end.col
 						);
 						end.robotObject.lookDown(cellToLookDown);
-						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
 						const isSeatCorrect = end.verifyCorrectSeatLabel();
 
 						if (isSeatCorrect) {
-							end.visual.material.color.set(0x00ff00);
-							end.visual.material.opacity = 0.5;
-
+							end.robotObject.isSeatedCorrectly = true;
+							
 							// Add a smile image above the robot
 							const worldPos = end.robotObject.robot.position.clone();
 							worldPos.x += end.col === 2 ? 0.2 : -0.2;
@@ -231,8 +230,6 @@ export class GameLogic {
 								this.scene.camera,
 								this.scene.threeRenderer.domElement
 							);
-
-							console.log("screen", screen);
 
 							const smileImage = this.scene.add.image(
 								screen.x,
@@ -263,9 +260,7 @@ export class GameLogic {
 								},
 							});
 						} else {
-							end.visual.material.color.set(0xff0000);
-							end.visual.material.opacity = 0.5;
-
+							end.robotObject.isSeatedCorrectly = false;
 							// Add a sad image above the robot
 						}
 					}
@@ -334,9 +329,7 @@ export class GameLogic {
 
 			const startTime = performance.now();
 			const cubicEaseInOut = (t) =>
-				t < 0.5
-					? 4 * t * t * t
-					: 1 - Math.pow(-2 * t + 2, 3) / 2;
+				t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 			const animate = (now) => {
 				const elapsed = now - startTime;
@@ -348,7 +341,10 @@ export class GameLogic {
 
 				const bobAmplitude = 0.07;
 				const bobFrequency = 2.5; // Hz
-				const bobOffset = Math.sin(ease * Math.PI * bobFrequency) * bobAmplitude * (1 - Math.abs(2 * ease - 1));
+				const bobOffset =
+					Math.sin(ease * Math.PI * bobFrequency) *
+					bobAmplitude *
+					(1 - Math.abs(2 * ease - 1));
 				robotModel.position.y = endPos.y + bobOffset;
 
 				if (t < 1) {

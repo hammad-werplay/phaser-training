@@ -117,7 +117,7 @@ export class Preloader extends Phaser.Scene {
 				};
 
 				// Apply color to the model
-				const baseColor = 0x00ff00;
+				const baseColor = 0xff0000; // Red
 				const glowColor = 0xffd700;
 				object.traverse((child) => {
 					if (child.isMesh) {
