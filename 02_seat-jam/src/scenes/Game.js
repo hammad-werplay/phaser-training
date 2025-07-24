@@ -533,7 +533,7 @@ export class Game extends Phaser.Scene {
 	initializeScene() {
 		const gameUI = new GameUI(this);
 		gameUI.createNavbar();
-		this.createMovesBox();
+		gameUI.createMovesBox();
 		this.createMainScene();
 		this.createInvisibleGrid();
 		this.createFooter();
