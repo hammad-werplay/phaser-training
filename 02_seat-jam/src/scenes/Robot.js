@@ -31,9 +31,29 @@ export class Robot {
 		console.log(`Playing animation: ${name}`);
 
 		action.reset();
-		action.setLoop(
-			name.includes("Sitting") ? THREE.LoopOnce : THREE.LoopRepeat
-		);
+		if (name.includes("Sitting")) {
+			action.setLoop(THREE.LoopOnce, 1);
+			action.clampWhenFinished = true;
+			action.paused = false;
+			action.reset();
+			action.play();
+			action.onFinished = () => {
+				action.stop();
+				action.enabled = true;
+				action.time = action.getClip().duration;
+				action.setEffectiveWeight(1);
+			};
+			this.mixer.addEventListener("finished", (e) => {
+				if (e.action === action) {
+					action.stop();
+					action.enabled = true;
+					action.time = action.getClip().duration;
+					action.setEffectiveWeight(1);
+				}
+			});
+		} else {
+			action.setLoop(THREE.LoopRepeat);
+		}
 		action.clampWhenFinished = true;
 		action.play();
 	}
@@ -41,17 +61,15 @@ export class Robot {
 	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle", labelText) {
 		this.robot.position.copy(cell.visual.position);
 
-		if (animationName) {
+		if (animationName && cell.type !== "seat") {
 			this.playAnimation(animationName);
+		} else {
+			this.playAnimation("RobotArmature|Robot_Sitting");
 		}
 
 		cell.robotObject = this;
 		cell.robot = this.robot;
 		cell.isBlocked = true;
-
-		if (cell.type === "seat") {
-			this.playAnimation("RobotArmature|Robot_Sitting");
-		}
 
 		scene.add(this.robot);
 
