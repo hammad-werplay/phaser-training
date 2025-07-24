@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { Robot } from "./Robot";
 
 export class GameUI {
@@ -316,5 +317,126 @@ export class GameUI {
 			robotModel.attachTo(cell, this.scene.threeScene, undefined, seat);
 			return robotModel;
 		});
+	}
+
+	showCorrectSeatLabelImage(image) {
+		let imageTexture;
+
+		if (this.scene.textures.exists(image)) {
+			const src = this.scene.textures.get(image).getSourceImage().src;
+			imageTexture = new THREE.TextureLoader().load(src);
+		} else {
+			console.error(`${image} texture not found in Phaser cache`);
+			return;
+		}
+
+		const imageMaterial = new THREE.SpriteMaterial({
+			map: imageTexture,
+			transparent: true,
+			depthTest: false,
+			depthWrite: false,
+			opacity: 0,
+		});
+
+		const imageSprite = new THREE.Sprite(imageMaterial);
+
+		// Make the image big and centered above the boxes at the top
+		// We'll estimate the grid center and place the image above it, high up
+		const boxes = this.scene.invisibleBoxes;
+		if (!boxes || boxes.length === 0) {
+			console.error(
+				"No invisible boxes found for positioning the label image."
+			);
+			return;
+		}
+
+		// Find grid bounds
+		let minX = Infinity,
+			maxX = -Infinity,
+			minZ = Infinity,
+			maxZ = -Infinity;
+		for (const box of boxes) {
+			const pos = box.position;
+			if (pos.x < minX) minX = pos.x;
+			if (pos.x > maxX) maxX = pos.x;
+			if (pos.z < minZ) minZ = pos.z;
+			if (pos.z > maxZ) maxZ = pos.z;
+		}
+		const centerX = (minX + maxX) / 2;
+		const centerZ = (minZ + maxZ) / 2;
+
+		// Place the image above the grid, at the center, and high up
+		imageSprite.position.set(centerX, 0, centerZ - 1.1);
+
+		// Make the image big
+		const bigScale = 2.8	;
+		imageSprite.scale.set(bigScale * 3.8, bigScale * 0.4, bigScale * 0.8);
+
+		// Always face the camera
+		imageSprite.onBeforeRender = (renderer, scene, camera) => {
+			imageSprite.quaternion.copy(camera.quaternion);
+		};
+
+		this.scene.threeScene.add(imageSprite);
+
+		// Animate: fade in, hold, fade out, then remove
+		let elapsed = 0;
+		let phase = 0; // 0: fade in, 1: hold, 2: fade out
+		const fadeInDuration = 300;
+		const holdDuration = 700;
+		const fadeOutDuration = 800;
+		const startScale = bigScale * 0.7;
+		const endScale = bigScale;
+
+		imageSprite.scale.set(startScale, startScale * 0.5, startScale);
+
+		const animateImage = (time, delta) => {
+			// delta is in ms
+			elapsed += delta;
+			if (phase === 0) {
+				// Fade in
+				const t = Math.min(elapsed / fadeInDuration, 1);
+				imageSprite.material.opacity = t;
+				const scale = startScale + (endScale - startScale) * t;
+				const xScale = scale * 1.6;
+				const yScale = scale * 0.4;
+				const zScale = scale * 0.8;
+				imageSprite.scale.set(xScale, yScale, zScale);
+				if (t >= 1) {
+					phase = 1;
+					elapsed = 0;
+				}
+			} else if (phase === 1) {
+				// Hold
+				imageSprite.material.opacity = 1;
+				const scale = endScale;
+				const xScale = scale * 1.6;
+				const yScale = scale * 0.4;
+				const zScale = scale * 0.8;
+				imageSprite.scale.set(xScale, yScale, zScale);
+				if (elapsed >= holdDuration) {
+					phase = 2;
+					elapsed = 0;
+				}
+			} else if (phase === 2) {
+				// Fade out
+				const t = Math.min(elapsed / fadeOutDuration, 1);
+				imageSprite.material.opacity = 1 - t;
+				const scale = endScale - (endScale - startScale) * t;
+				const xScale = scale * 1.6;
+				const yScale = scale * 0.4;
+				const zScale = scale * 0.8;
+				imageSprite.scale.set(xScale, yScale, zScale);
+				if (t >= 1) {
+					this.scene.threeScene.remove(imageSprite);
+					imageSprite.material.dispose();
+					imageTexture.dispose();
+					this.scene.events.off("update", animateImage);
+				}
+			}
+		};
+
+		// Listen to the scene's update event (Phaser's event emitter)
+		this.scene.events.on("update", animateImage);
 	}
 }

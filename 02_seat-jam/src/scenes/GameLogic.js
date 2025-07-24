@@ -161,7 +161,7 @@ export class GameLogic {
 					const robotObject = this.scene.startCell.robotObject;
 					robotObject.playAnimation();
 					robotObject.transformRobotHead(false);
-					robotObject.showEmotionSpriteAboveRobot('angry', this.scene);
+					robotObject.showEmotionSpriteAboveRobot("angry", this.scene);
 					this.scene.startCell = null;
 					return;
 				}
@@ -185,7 +185,17 @@ export class GameLogic {
 						isSeatCorrect = end.verifyCorrectSeatLabel();
 
 						end.robotObject.isSeatedCorrectly = isSeatCorrect;
-						end.robotObject.showEmotionSpriteAboveRobot(isSeatCorrect ? 'smile' : 'angry', this.scene);
+						end.robotObject.showEmotionSpriteAboveRobot(
+							isSeatCorrect
+								? Math.random() > 0.5
+									? "smile"
+									: "swag"
+								: "angry",
+							this.scene
+						);
+						this.gameUI.showCorrectSeatLabelImage(
+							isSeatCorrect ? "correctMoveLabel" : "incorrectMoveLabel"
+						);
 					}
 
 					if (!isSeatCorrect) {

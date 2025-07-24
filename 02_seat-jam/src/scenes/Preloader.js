@@ -15,6 +15,9 @@ import { smilePNG } from "../../media/images_smile.png.js";
 import { angryPNG } from "../../media/images_angry.png.js";
 import { happyCharacterPNG } from "../../media/images_happyCharacter.png.js";
 import { FailedCharactersPNG } from "../../media/images_FailedCharacters.png.js";
+import { CorrectMoveLabelPNG } from "../../media/images_CorrectMoveLabel.png.js";
+import { wrongSeatLabelPNG } from "../../media/images_wrongSeatLabel.png.js";
+import { swagPNG } from "../../media/images_swag.png.js";
 
 // Models
 import { FBXLoader } from "three/examples/jsm/Addons.js";
@@ -49,7 +52,10 @@ export class Preloader extends Phaser.Scene {
 		this.load.image("smile", smilePNG);
 		this.load.image("angry", angryPNG);
 		this.load.image("happyCharacter", happyCharacterPNG);
+		this.load.image("swag", swagPNG);
 		this.load.image("failedCharacters", FailedCharactersPNG);
+		this.load.image("correctMoveLabel", CorrectMoveLabelPNG);
+		this.load.image("incorrectMoveLabel", wrongSeatLabelPNG);
 
 		LoadBase64Audio(this, [{ key: "sound_fx", data: soundFxMP3 }]);
 	}
