@@ -307,32 +307,55 @@ export class GameLogic {
 		const moveToCell = (fromCell, toCell, nextCell, onArrive) => {
 			const startPos = getCellPosition(fromCell);
 			const endPos = getCellPosition(toCell);
+			const startQuat = robotModel.quaternion.clone();
+			const up = new THREE.Vector3(0, 1, 0);
+			const targetQuat = new THREE.Quaternion();
+
+			let targetLookPos;
+			if (nextCell) {
+				targetLookPos = getCellPosition(nextCell);
+				const lookDir = targetLookPos.clone().sub(endPos).normalize();
+
+				if (lookDir.lengthSq() > 0.0001) {
+					const lookAtMatrix = new THREE.Matrix4();
+					lookAtMatrix.lookAt(targetLookPos, endPos, up);
+					targetQuat.setFromRotationMatrix(lookAtMatrix);
+				} else {
+					targetQuat.copy(startQuat);
+				}
+			} else {
+				const lookDir = new THREE.Vector3(0, 0, -1);
+				const from = endPos.clone();
+				const to = from.clone().add(lookDir);
+				const lookAtMatrix = new THREE.Matrix4();
+
+				targetQuat.setFromRotationMatrix(lookAtMatrix);
+			}
+
 			const startTime = performance.now();
+			const cubicEaseInOut = (t) =>
+				t < 0.5
+					? 4 * t * t * t
+					: 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 			const animate = (now) => {
 				const elapsed = now - startTime;
 				const t = Math.min(elapsed / MOVE_DURATION, 1);
-				const ease = -(Math.cos(Math.PI * t) - 1) / 2; // easeInOutSine
+				const ease = cubicEaseInOut(t);
 
 				robotModel.position.lerpVectors(startPos, endPos, ease);
+				robotModel.quaternion.copy(startQuat.clone().slerp(targetQuat, ease));
 
-				// Smoothly rotate towards next cell if available
-				if (nextCell) {
-					const nextPos = getCellPosition(nextCell);
-					const direction = nextPos
-						.clone()
-						.sub(robotModel.position)
-						.normalize();
-					const currentDir = robotModel.getWorldDirection(new THREE.Vector3());
-					const lerpedDir = currentDir.lerp(direction, 0.15 * ease).normalize();
-					const lookTarget = robotModel.position.clone().add(lerpedDir);
-					robotModel.lookAt(lookTarget);
-				}
+				const bobAmplitude = 0.07;
+				const bobFrequency = 2.5; // Hz
+				const bobOffset = Math.sin(ease * Math.PI * bobFrequency) * bobAmplitude * (1 - Math.abs(2 * ease - 1));
+				robotModel.position.y = endPos.y + bobOffset;
 
-				if (t < 0.9) {
+				if (t < 1) {
 					requestAnimationFrame(animate);
 				} else {
 					robotModel.position.copy(endPos);
+					robotModel.quaternion.copy(targetQuat);
 					if (onArrive) onArrive();
 				}
 			};
@@ -365,8 +388,6 @@ export class GameLogic {
 	}
 
 	checkWin() {
-		// If all robots are in their correct seats, show the success image
-		// Check if all seat cells have the correct robot label
 		if (
 			!this.scene.gameWon &&
 			this.scene.grid &&
