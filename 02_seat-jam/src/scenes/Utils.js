@@ -27,6 +27,16 @@ export class Utils {
 	static createGameScenario() {
 		const scenarios = [
 			[
+				{ seat: "A3", position: [0, 0] },
+				{ seat: "B1", position: [2, 0] },
+				{ seat: "A1", position: [3, 0] },
+				{ seat: "A2", position: [5, 0] },
+				{ seat: "A4", position: [4, 1] },
+				{ seat: "B2", position: [4, 2] },
+				{ seat: "B3", position: [3, 3] },
+				{ seat: "B4", position: [1, 2] },
+			],
+			[
 				{ seat: "A1", position: [4, 1] },
 				{ seat: "A2", position: [2, 2] },
 				{ seat: "A3", position: [0, 3] },
@@ -46,18 +56,31 @@ export class Utils {
 				{ seat: "B3", position: [3, 3] },
 				{ seat: "B4", position: [1, 2] },
 			],
+			[
+				{ seat: "A1", position: [0, 0] },
+				{ seat: "A2", position: [2, 2] },
+				{ seat: "A3", position: [3, 0] },
+				{ seat: "A4", position: [5, 0] },
+				{ seat: "B1", position: [4, 1] },
+				{ seat: "B2", position: [4, 2] },
+				{ seat: "B3", position: [3, 3] },
+				{ seat: "B4", position: [1, 2] },
+			],
+			[
+				{ seat: "A1", position: [3, 0] },
+				{ seat: "A2", position: [2, 3] },
+				{ seat: "A3", position: [3, 1] },
+				{ seat: "A4", position: [5, 0] },
+				{ seat: "B1", position: [4, 1] },
+				{ seat: "B2", position: [3, 2] },
+				{ seat: "B3", position: [3, 3] },
+				{ seat: "B4", position: [2, 2] },
+			],
 		];
 
-		const robotPositions = [
-			{ seat: "A3", position: [0, 0] },
-			{ seat: "B1", position: [2, 0] },
-			{ seat: "A1", position: [3, 0] },
-			{ seat: "A2", position: [5, 0] },
-			{ seat: "A4", position: [4, 1] },
-			{ seat: "B2", position: [4, 2] },
-			{ seat: "B3", position: [3, 3] },
-			{ seat: "B4", position: [1, 2] },
-		];
+		const robotPositions = scenarios[0];
+		// const robotPositions =
+		// 	scenarios[Math.floor(Math.random() * scenarios.length)];
 
 		// Step 1: Decide the seats location (No random)
 		// Step 2: Decide the robots location (Random)
