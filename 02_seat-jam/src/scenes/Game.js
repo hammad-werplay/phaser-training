@@ -14,6 +14,7 @@ export class Game extends Phaser.Scene {
 
 		this.movesLeft = 7;
 		this.startCell;
+		this.isRobotMoving = false;
 	}
 
 	init() {

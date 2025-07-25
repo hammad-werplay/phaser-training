@@ -121,7 +121,9 @@ export class GameLogic {
 				this.scene.invisibleBoxes
 			);
 
-			if (intersects.length > 0) {
+			console.log(this.scene.isRobotMoving);
+
+			if (intersects.length > 0 && !this.scene.isRobotMoving) {
 				const { row, col } = intersects[0].object.userData;
 				const clickedBox = this.scene.grid.getCell(row, col);
 
@@ -168,6 +170,7 @@ export class GameLogic {
 
 				this.movePlayerAlongPath(path, () => {
 					this.scene.startCell = null;
+					this.scene.isRobotMoving = false;
 					end.robot = start.robot;
 					end.robotObject = start.robotObject;
 					start.robotObject.playAnimation();
@@ -268,6 +271,7 @@ export class GameLogic {
 			const cubicEaseInOut = (t) =>
 				t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
+			this.scene.isRobotMoving = true;
 			const animate = (now) => {
 				const elapsed = now - startTime;
 				const t = Math.min(elapsed / MOVE_DURATION, 1);
