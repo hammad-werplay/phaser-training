@@ -38,182 +38,198 @@ export class GameLogic {
 		this.gameUI.loadModels();
 	}
 
-	drawInvisibleGrid() {}
+	getClickedCell(event) {
+		const rect = this.scene.threeCanvas.getBoundingClientRect();
+
+		this.scene.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+		this.scene.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+		this.scene.raycaster.setFromCamera(this.scene.mouse, this.scene.camera);
+
+		const intersects = this.scene.raycaster.intersectObjects(
+			this.scene.invisibleBoxes
+		);
+
+		if (intersects.length === 0) return null;
+
+		const { row, col } = intersects[0].object.userData;
+		return this.scene.grid.getCell(row, col);
+	}
+
+	selectStartCell(cell) {
+		this.scene.startCell = cell;
+		cell.robotObject.transformRobotHead(true);
+	}
+
+	trySwitchSelection(cell) {
+		if (this.scene.startCell && cell.robot && cell.robotObject) {
+			this.scene.startCell.robotObject.transformRobotHead(false);
+			this.scene.startCell.robotObject.playAnimation();
+			this.scene.startCell = cell;
+			cell.robotObject.transformRobotHead(true);
+			return true;
+		}
+		return false;
+	}
+
+	isSameCellClicked(cell) {
+		if (this.scene.startCell.key() === cell.key()) {
+			this.scene.startCell = null;
+			return true;
+		}
+		return false;
+	}
+
+	tryMoveRobot(endCell) {
+		const start = this.scene.startCell;
+		const path = this.scene.pathFinder.findShortestPath(start, endCell);
+
+		if (!path) {
+			this.handleNoPathFound(start);
+			return;
+		}
+
+		this.scene.isRobotMoving = true;
+
+		this.movePlayerAlongPath(path, () => {
+			this.afterMoveComplete(start, endCell);
+		});
+	}
+
+	handleNoPathFound(start) {
+		const robotObject = start.robotObject;
+		robotObject.playAnimation();
+		robotObject.transformRobotHead(false);
+		robotObject.showEmotionSpriteAboveRobot("angry", this.scene);
+		this.scene.startCell = null;
+	}
+
+	afterMoveComplete(start, end) {
+		this.scene.startCell = null;
+		this.scene.isRobotMoving = false;
+
+		end.robot = start.robot;
+		end.robotObject = start.robotObject;
+
+		start.robot = null;
+		start.robotObject = null;
+
+		end.robotObject.playAnimation();
+		const cellBelow = this.scene.grid.getCell(end.row + 1, end.col);
+		end.robotObject.lookDown(cellBelow);
+		end.robotObject.transformRobotHead(false);
+
+		if (end.type === "seat") {
+			const isSeatCorrect = this.handleSeatingLogic(end);
+			end.robotObject.isSeatedCorrectly = isSeatCorrect;
+		}
+
+		this.scene.movesLeft--;
+		this.scene.moveCountText.setText(this.scene.movesLeft.toString());
+	}
+
+	handleSeatingLogic(end) {
+		const cellBelow = this.scene.grid.getCell(end.row + 1, end.col);
+		end.robotObject.lookDown(cellBelow);
+
+		const isCorrect = end.verifyCorrectSeatLabel();
+		end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
+		end.robotObject.showEmotionSpriteAboveRobot(
+			isCorrect ? (Math.random() > 0.5 ? "smile" : "swag") : "angry",
+			this.scene
+		);
+		this.gameUI.showCorrectSeatLabelImage(
+			isCorrect ? "correctMoveLabel" : "incorrectMoveLabel"
+		);
+		return isCorrect;
+	}
+
+	handlePointerClick(event) {
+		const cell = this.getClickedCell(event);
+		if (!cell || this.scene.isRobotMoving) return;
+
+		if (!this.scene.startCell && !cell.robot) return;
+
+		if (!this.scene.startCell) {
+			this.selectStartCell(cell);
+			return;
+		}
+
+		if (this.trySwitchSelection(cell)) return;
+		if (this.isSameCellClicked(cell)) return;
+
+		this.tryMoveRobot(cell);
+	}
+
+	drawInvisibleGrid() {
+		const cellWidth = 0.41;
+		const cellHeight = 0.31;
+
+		const gridWidth = this.totalCols * cellWidth - 0.43;
+		const gridHeight =
+			this.totalRows * cellHeight -
+			(this.scene.scale.width < 500
+				? 0.4
+				: this.scene.scale.width > 1000
+				? 0.14
+				: 0.28);
+
+		const startX = -gridWidth / 2;
+		const startZ = -gridHeight / 2;
+
+		// Clear existing boxes
+		this.scene.invisibleBoxes.forEach((box) => {
+			this.scene.threeScene.remove(box);
+			box.geometry.dispose();
+			box.material.dispose();
+		});
+		this.scene.invisibleBoxes = [];
+
+		// Create new boxes
+		for (let row = 0; row < this.totalRows; row++) {
+			for (let col = 0; col < this.totalCols; col++) {
+				const logicBox = this.scene.grid.getCell(row, col);
+
+				// Create a transparent box (Mesh)
+				const geometry = new THREE.BoxGeometry(1, 1, 1);
+				const material = new THREE.MeshBasicMaterial({
+					color: 0xff0000,
+					transparent: true,
+					opacity: 0,
+				});
+
+				const box = new THREE.Mesh(geometry, material);
+				box.position.set(
+					startX + col * cellWidth,
+					0,
+					startZ + row * cellHeight
+				);
+				box.scale.set(0.39, 0.025, 0.29);
+				box.userData = { row, col };
+
+				logicBox.visual = box;
+				logicBox.isBlocked = false;
+
+				this.scene.threeScene.add(box);
+				this.scene.invisibleBoxes.push(box);
+			}
+		}
+	}
 
 	createInvisibleGrid() {
 		this.scene.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.scene.pathFinder = new PathFinder(this.scene.grid);
 		this.scene.invisibleBoxes = [];
-		const boxSize = 1;
-		const bg = this.scene.mainSceneBg;
-
-		const drawGrid = () => {
-			this.scene.invisibleBoxes.forEach((box) => {
-				this.scene.threeScene.remove(box);
-				box.geometry.dispose();
-				box.material.dispose();
-			});
-			this.scene.invisibleBoxes = [];
-
-			const cellWidth = 0.41;
-			const cellHeight = 0.31;
-
-			const gridWidth = this.totalCols * cellWidth - 0.43;
-			const gridHeight =
-				this.totalRows * cellHeight -
-				(this.scene.scale.width < 500
-					? 0.4
-					: this.scene.scale.width > 1000
-					? 0.14
-					: 0.28);
-
-			const startingPositions = {
-				x: -gridWidth / 2,
-				y: 0,
-				z: -gridHeight / 2,
-			};
-
-			for (let row = 0; row < this.totalRows; row++) {
-				for (let col = 0; col < this.totalCols; col++) {
-					const logicBox = this.scene.grid.getCell(row, col);
-
-					// Create a transparent box (Mesh)
-					const geometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-					const material = new THREE.MeshBasicMaterial({
-						color: 0xff0000,
-						transparent: true,
-						opacity: 0,
-					});
-
-					const box = new THREE.Mesh(geometry, material);
-					box.position.set(
-						startingPositions.x + col * cellWidth,
-						0,
-						startingPositions.z + row * cellHeight
-					);
-					box.scale.set(0.39, 0.025, 0.29);
-					box.userData = { row, col };
-
-					logicBox.visual = box;
-					logicBox.isBlocked = false;
-
-					this.scene.threeScene.add(box);
-					this.scene.invisibleBoxes.push(box);
-				}
-			}
-		};
 
 		// Initial Draw
-		drawGrid();
+		this.drawInvisibleGrid();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawGrid, this);
+		this.scene.scale.on("resize", this.drawInvisibleGrid, this);
 
 		// Click on invisible boxes
 		this.scene.mouse = new THREE.Vector2();
-		window.addEventListener("pointerdown", (event) => {
-			const rect = this.scene.threeCanvas.getBoundingClientRect();
-
-			this.scene.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-			this.scene.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-			this.scene.raycaster.setFromCamera(this.scene.mouse, this.scene.camera);
-
-			const intersects = this.scene.raycaster.intersectObjects(
-				this.scene.invisibleBoxes
-			);
-
-			if (intersects.length > 0 && !this.scene.isRobotMoving) {
-				const { row, col } = intersects[0].object.userData;
-				const clickedBox = this.scene.grid.getCell(row, col);
-
-				if (!clickedBox.robot && !this.scene.startCell) {
-					return;
-				}
-
-				if (!this.scene.startCell) {
-					this.scene.startCell = clickedBox;
-					clickedBox.robotObject.playAnimation("RobotArmature|Robot_Yes");
-					clickedBox.robotObject.transformRobotHead(true);
-					return;
-				}
-
-				const endCell = clickedBox;
-
-				if (this.scene.startCell && endCell.robot && endCell.robotObject) {
-					this.scene.startCell.robotObject.transformRobotHead(false);
-					this.scene.startCell.robotObject.playAnimation();
-					this.scene.startCell = endCell;
-					endCell.robotObject.transformRobotHead(true);
-					return;
-				}
-
-				if (this.scene.startCell.key() === endCell.key()) {
-					this.scene.startCell = null;
-					return;
-				}
-
-				const start = this.scene.startCell;
-				const end = endCell;
-
-				const path = this.scene.pathFinder.findShortestPath(start, end);
-
-				if (!path) {
-					console.error("No path found");
-					const robotObject = this.scene.startCell.robotObject;
-					robotObject.playAnimation();
-					robotObject.transformRobotHead(false);
-					robotObject.showEmotionSpriteAboveRobot("angry", this.scene);
-					this.scene.startCell = null;
-					return;
-				}
-
-				this.movePlayerAlongPath(path, () => {
-					this.scene.startCell = null;
-					this.scene.isRobotMoving = false;
-					end.robot = start.robot;
-					end.robotObject = start.robotObject;
-					start.robotObject.playAnimation();
-					const cellToLookDown = this.scene.grid.getCell(end.row + 1, end.col);
-					end.robotObject.lookDown(cellToLookDown);
-					end.robotObject.transformRobotHead(false);
-
-					let isSeatCorrect = false;
-					if (end.type === "seat") {
-						const cellToLookDown = this.scene.grid.getCell(
-							end.row + 1,
-							end.col
-						);
-						end.robotObject.lookDown(cellToLookDown);
-						isSeatCorrect = end.verifyCorrectSeatLabel();
-
-						end.robotObject.isSeatedCorrectly = isSeatCorrect;
-						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
-						end.robotObject.showEmotionSpriteAboveRobot(
-							isSeatCorrect
-								? Math.random() > 0.5
-									? "smile"
-									: "swag"
-								: "angry",
-							this.scene
-						);
-						this.gameUI.showCorrectSeatLabelImage(
-							isSeatCorrect ? "correctMoveLabel" : "incorrectMoveLabel"
-						);
-					}
-
-					if (!isSeatCorrect) {
-						end.robotObject.isSeatedCorrectly = false;
-					}
-
-					start.robot = null;
-					start.robotObject = null;
-
-					this.scene.movesLeft--;
-					this.scene.moveCountText.setText(this.scene.movesLeft.toString());
-				});
-			}
-		});
+		window.addEventListener("pointerdown", this.handlePointerClick.bind(this));
 	}
 
 	movePlayerAlongPath(path, onComplete) {

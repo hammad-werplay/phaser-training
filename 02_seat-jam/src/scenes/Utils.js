@@ -76,6 +76,16 @@ export class Utils {
 				{ seat: "B3", position: [3, 3] },
 				{ seat: "B4", position: [2, 2] },
 			],
+			[
+				{ seat: "A1", position: [0, 3] },
+				{ seat: "A2", position: [1, 0] },
+				{ seat: "A3", position: [2, 1] },
+				{ seat: "A4", position: [1, 3] },
+				{ seat: "B1", position: [0, 1] },
+				{ seat: "B2", position: [4, 2] },
+				{ seat: "B3", position: [1, 2] },
+				{ seat: "B4", position: [2, 2] },
+			],
 		];
 
 		const robotPositions = scenarios[0];
