@@ -123,8 +123,6 @@ export class GameLogic {
 				this.scene.invisibleBoxes
 			);
 
-			console.log(this.scene.isRobotMoving);
-
 			if (intersects.length > 0 && !this.scene.isRobotMoving) {
 				const { row, col } = intersects[0].object.userData;
 				const clickedBox = this.scene.grid.getCell(row, col);
@@ -190,6 +188,7 @@ export class GameLogic {
 						isSeatCorrect = end.verifyCorrectSeatLabel();
 
 						end.robotObject.isSeatedCorrectly = isSeatCorrect;
+						end.robotObject.playAnimation("RobotArmature|Robot_Sitting");
 						end.robotObject.showEmotionSpriteAboveRobot(
 							isSeatCorrect
 								? Math.random() > 0.5
@@ -236,7 +235,7 @@ export class GameLogic {
 		const getCellPosition = (cell) => {
 			return new THREE.Vector3(
 				cell.visual.position.x,
-				cell.visual.position.y + 0.1,
+				cell.visual.position.y,
 				cell.visual.position.z
 			);
 		};

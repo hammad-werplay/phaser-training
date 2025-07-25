@@ -30,31 +30,21 @@ export class Robot {
 		});
 
 		action.reset();
-		if (name.includes("Sitting")) {
-			action.setLoop(THREE.LoopOnce, 1);
-			action.clampWhenFinished = true;
-			action.paused = false;
-			action.reset();
+		action.enabled = true;
+
+		const isSitting = name.includes("Sitting");
+
+		if (isSitting) {
+			const clip = action.getClip();
+			const halfDuration = clip.duration * 0.5;
 			action.play();
-			action.onFinished = () => {
-				action.stop();
-				action.enabled = true;
-				action.time = action.getClip().duration;
-				action.setEffectiveWeight(1);
-			};
-			this.mixer.addEventListener("finished", (e) => {
-				if (e.action === action) {
-					action.stop();
-					action.enabled = true;
-					action.time = action.getClip().duration;
-					action.setEffectiveWeight(1);
-				}
-			});
+			action.paused = true;
+			action.time = halfDuration;
 		} else {
 			action.setLoop(THREE.LoopRepeat);
+			action.clampWhenFinished = true;
+			action.play();
 		}
-		action.clampWhenFinished = true;
-		action.play();
 	}
 
 	attachTo(cell, scene, animationName = "RobotArmature|Robot_Idle", labelText) {
@@ -145,10 +135,8 @@ export class Robot {
 		this._isSeatedCorrectly = value;
 
 		if (value) {
-			this.playAnimation("RobotArmature|Robot_Sitting");
 			this.changeRobotColor(value);
 		} else {
-			this.playAnimation("RobotArmature|Robot_Idle");
 			this.changeRobotColor(false);
 		}
 	}
@@ -159,12 +147,12 @@ export class Robot {
 				if (!child.userData._clonedMaterial) {
 					const cloned = child.material.clone();
 					child.userData._clonedMaterial = true;
-					child.userData._originalColor = cloned.color.clone(); 
+					child.userData._originalColor = cloned.color.clone();
 					child.material = cloned;
 				}
-	
+
 				if (isSeated) {
-					child.material.color.set(0x00ff00); 
+					child.material.color.set(0x00ff00);
 				} else {
 					if (child.userData._originalColor) {
 						child.material.color.copy(child.userData._originalColor);
@@ -173,7 +161,6 @@ export class Robot {
 			}
 		});
 	}
-	
 
 	getModel() {
 		return this.robot;
@@ -195,7 +182,7 @@ export class Robot {
 			transparent: true,
 			depthTest: false,
 			depthWrite: false,
-			opacity: 0
+			opacity: 0,
 		});
 
 		const emotionSprite = new THREE.Sprite(emotionMaterial);
@@ -211,7 +198,7 @@ export class Robot {
 		emotionSprite.onBeforeRender = (renderer, scene, camera) => {
 			emotionSprite.quaternion.copy(camera.quaternion);
 		};
-		
+
 		scene.threeScene.add(emotionSprite);
 
 		// Animate: fade in, hold, fade out, then remove
@@ -256,14 +243,13 @@ export class Robot {
 					scene.threeScene.remove(emotionSprite);
 					emotionSprite.material.dispose();
 					emotionTexture.dispose();
-					scene.events.off('update', animateAngry);
+					scene.events.off("update", animateAngry);
 				}
 			}
 		};
 
 		// Listen to the scene's update event (Phaser's event emitter)
-		scene.events.on('update', animateAngry);
-		
+		scene.events.on("update", animateAngry);
 	}
 
 	transformRobotHead(toSelected = true) {
@@ -299,5 +285,5 @@ export class Robot {
 				}
 			});
 		}
-	};
+	}
 }
