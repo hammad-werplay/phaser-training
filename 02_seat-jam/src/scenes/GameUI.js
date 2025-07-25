@@ -322,12 +322,15 @@ export class GameUI {
 			return;
 		}
 
+		// Color space conversion rgb
+		imageTexture.colorSpace = THREE.SRGBColorSpace;
+
 		const imageMaterial = new THREE.SpriteMaterial({
 			map: imageTexture,
 			transparent: true,
 			depthTest: false,
 			depthWrite: false,
-			opacity: 0,
+			opacity: 1,
 		});
 
 		const imageSprite = new THREE.Sprite(imageMaterial);

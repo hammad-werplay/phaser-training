@@ -38,6 +38,8 @@ export class GameLogic {
 		this.gameUI.loadModels();
 	}
 
+	drawInvisibleGrid() {}
+
 	createInvisibleGrid() {
 		this.scene.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.scene.pathFinder = new PathFinder(this.scene.grid);

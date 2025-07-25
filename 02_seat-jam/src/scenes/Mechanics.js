@@ -23,24 +23,45 @@ class Cell {
 		return this.seatLabel === this.robotObject?.robotLabel;
 	}
 
+	getDirections() {
+		if (this.type === "seat") {
+			if (this.row === 4) {
+				return [
+					[0, 1],
+					[0, -1],
+					[1, 0],
+				];
+			} else {
+				return [
+					[0, 1],
+					[0, -1],
+				];
+			}
+		} else {
+			if (this.row === 5) {
+				return [
+					[0, 1],
+					[0, -1],
+					[-1, 0],
+				];
+			}
+
+			return [
+				[0, 1],
+				[0, -1],
+				[1, 0],
+				[-1, 0],
+			];
+		}
+	}
+
 	/**
 	 * Return neighbor cells based on movement rules:
 	 * - seats: left/right only
 	 * - nonSeats: up/down/left/right
 	 */
 	getNeighbors(grid) {
-		const deltas =
-			this.type === "seat"
-				? [
-						[0, 1],
-						[0, -1],
-				  ]
-				: [
-						[0, 1],
-						[0, -1],
-						[1, 0],
-						[-1, 0],
-				  ];
+		const deltas = this.getDirections();
 
 		const neighbors = [];
 		for (const [dRow, dCol] of deltas) {
@@ -49,7 +70,7 @@ class Cell {
 			const cell = grid.getCell(newRow, newCol);
 
 			if (cell && !cell.isBlocked) {
-				if (dRow !== 0 && cell.type === "seat") continue;
+				if (dRow !== 0 && cell.type === "seat" && this.row !== 5) continue;
 				neighbors.push(cell);
 			}
 		}
