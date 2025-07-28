@@ -110,6 +110,7 @@ export class Game extends Phaser.Scene {
 		this.gameLogic = new GameLogic(this);
 
 		this.gameLogic.startGame();
+		this.game.onResize();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
