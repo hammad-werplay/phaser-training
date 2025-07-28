@@ -434,4 +434,12 @@ export class GameUI {
 		// Listen to the scene's update event (Phaser's event emitter)
 		this.scene.events.on("update", animateImage);
 	}
+
+	ResizeLandscape(config) {
+		console.log("Resize Landscape", config);
+	}
+
+	ResizePortrait(config) {
+		console.log("Resize Portrait", config);
+	}
 }

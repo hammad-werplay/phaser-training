@@ -101,8 +101,55 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera);
 	}
 
+	ResizeHandler(orientation, config, scene) {
+		this.onResize = function (orientation) {
+			console.group("Resize Handler");
+			const bw = window.innerWidth;
+			const bh = window.innerHeight;
+
+			console.log("Resize Handler:", orientation, bw, bh);
+
+			if (this.isRenderingThree) {
+				// Update Three.js renderer size to match browser window
+				console.log("Updating Three.js renderer size:", bw, bh);
+				this.threeRenderer.setSize(bw, bh);
+			}
+
+			// Update camera aspect ratio
+			this.camera.aspect = bw / bh;
+			this.camera.updateProjectionMatrix();
+			console.log("Camera aspect ratio updated:", this.camera.aspect);
+
+			// Adjust Three.js canvas position to match Phaser canvas
+			const phaserCanvas = this.scale.canvas;
+			const phaserRect = phaserCanvas.getBoundingClientRect();
+
+			this.threeCanvas.style.top = phaserRect.top + "px";
+			this.threeCanvas.style.left = phaserRect.left + "px";
+			this.threeCanvas.style.width = phaserRect.width + "px";
+			this.threeCanvas.style.height = phaserRect.height + "px";
+
+			console.log(
+				"Three.js canvas adjusted to Phaser canvas dimensions:",
+				phaserRect
+			);
+
+			// Adjust based on orientation
+			if (orientation === "landscape") {
+				console.log(this.gameLogic.gameUI);
+				this.gameLogic.gameUI.ResizeLandscape(config);
+			} else {
+				this.gameLogic.gameUI.ResizePortrait(config);
+			}
+			console.groupEnd();
+		};
+	}
+
 	create() {
 		this.adNetworkSetup();
+
+		let config = this.sys.game.config;
+		console.log("Game Config:", config);
 
 		this.loadedModels = this.registry.get("loadedModels");
 		this.setupThreeJS();
@@ -111,6 +158,8 @@ export class Game extends Phaser.Scene {
 
 		this.gameLogic.startGame();
 		this.game.onResize();
+
+		this.ResizeHandler(config.orientation, config, this);
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
