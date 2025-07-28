@@ -15,10 +15,6 @@ const gameConfig = {
 	projectHeight: 640,
 	orientation: "portrait",
 	backgroundColor: 0x87ceeb,
-	scale: {
-		mode: Phaser.Scale.RESIZE,
-		autoCenter: Phaser.Scale.CENTER_BOTH,
-	},
 	scene: [Preloader, Game],
 };
 
