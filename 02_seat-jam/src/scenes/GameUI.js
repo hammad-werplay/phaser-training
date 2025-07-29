@@ -64,7 +64,7 @@ export class GameUI {
 		drawNavbar();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawNavbar, this.scene);
+		// this.scene.scale.on("resize", drawNavbar, this.scene);
 	}
 
 	createMovesBox() {
@@ -461,6 +461,30 @@ export class GameUI {
 			mainSceneBgY = navHeight + availableHeight / 2;
 			this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
 		}
+
+		// Navbar
+		if (this.scene.navbarBg) {
+			const canvasWidth = config.width;
+			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
+
+			// Fix at the top
+			const navBarX = 0;
+			const navBarY = 0;
+			this.scene.navbarBg.setPosition(navBarX, navBarY);
+
+			// Font size
+			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
+			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
+				fontSize -= 1;
+				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			}
+
+			// Draw background bar
+			this.scene.navbarBg.clear();
+			this.scene.navbarBg.fillStyle(0x000000, 1);
+			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
+		}
 	}
 
 	ResizePortrait(config) {
@@ -503,6 +527,30 @@ export class GameUI {
 				mainSceneBgY = navHeight + availableHeight / 2;
 				this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
 			}
+		}
+
+		// Navbar
+		if (this.scene.navbarBg) {
+			const canvasWidth = config.width;
+			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
+
+			// Fix at the top
+			const navBarX = 0;
+			const navBarY = 0;
+			this.scene.navbarBg.setPosition(navBarX, navBarY);
+
+			// Font size
+			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
+			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
+				fontSize -= 1;
+				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			}
+
+			// Draw background bar
+			this.scene.navbarBg.clear();
+			this.scene.navbarBg.fillStyle(0x000000, 1);
+			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
 		}
 	}
 }
