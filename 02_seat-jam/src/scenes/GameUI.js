@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { Robot } from "./Robot";
 import { Utils } from "./Utils";
 
+let mainSceneBgScaleX;
+let mainSceneBgScaleY;
+let mainSceneBgX;
+let mainSceneBgY;
+
 export class GameUI {
 	constructor(scene) {
 		this.scene = scene;
@@ -244,7 +249,7 @@ export class GameUI {
 		drawMainScene();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawMainScene, this.scene);
+		// this.scene.scale.on("resize", drawMainScene, this.scene);
 	}
 
 	createDownloadBtn() {
@@ -437,9 +442,67 @@ export class GameUI {
 
 	ResizeLandscape(config) {
 		console.log("Resize Landscape", config);
+
+		// Main Scene
+		if (this.scene.mainSceneBg) {
+			// Scale
+			mainSceneBgScaleX = config.width / this.scene.mainSceneBg.width;
+			mainSceneBgScaleY = config.height / this.scene.mainSceneBg.height;
+			const minScale = 0.6;
+			let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+			scale = Math.max(scale, minScale);
+			this.scene.mainSceneBg.setScale(scale);
+
+			// Position
+			const navHeight = this.scene.navbarHeight || 50;
+			const footerHeight = this.scene.footerImage?.displayHeight || 100;
+			const availableHeight = config.height - navHeight - footerHeight;
+			mainSceneBgX = config.width / 2;
+			mainSceneBgY = navHeight + availableHeight / 2;
+			this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+		}
 	}
 
 	ResizePortrait(config) {
 		console.log("Resize Portrait", config);
+
+		let aspectRatio = config.width / config.height;
+
+		// Main Scene
+		if (this.scene.mainSceneBg) {
+			if (aspectRatio < 0.6) {
+				// Scale
+				mainSceneBgScaleX = 2.2;
+				mainSceneBgScaleY = 2.2;
+				const minScale = 0.6;
+				let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+				scale = Math.max(scale, minScale);
+				this.scene.mainSceneBg.setScale(scale);
+
+				// Position
+				const navHeight = this.scene.navbarHeight || 50;
+				const footerHeight = this.scene.footerImage?.displayHeight || 100;
+				const availableHeight = config.height - navHeight - footerHeight;
+				mainSceneBgX = config.width / 2;
+				mainSceneBgY = navHeight + availableHeight / 2;
+				this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+			} else {
+				// Scale
+				mainSceneBgScaleX = config.width / this.scene.mainSceneBg.width;
+				mainSceneBgScaleY = config.height / this.scene.mainSceneBg.height;
+				const minScale = 0.6;
+				let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+				scale = Math.max(scale, minScale);
+				this.scene.mainSceneBg.setScale(scale);
+
+				// Position
+				const navHeight = this.scene.navbarHeight || 50;
+				const footerHeight = this.scene.footerImage?.displayHeight || 100;
+				const availableHeight = config.height - navHeight - footerHeight;
+				mainSceneBgX = config.width / 2;
+				mainSceneBgY = navHeight + availableHeight / 2;
+				this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+			}
+		}
 	}
 }

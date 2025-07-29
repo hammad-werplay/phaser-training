@@ -103,7 +103,7 @@ export class Game extends Phaser.Scene {
 
 	ResizeHandler(orientation, config, scene) {
 		this.onResize = function (orientation) {
-			console.group("Resize Handler");
+			console.groupCollapsed("Resize Handler");
 			const bw = window.innerWidth;
 			const bh = window.innerHeight;
 
