@@ -11,6 +11,8 @@ export class GameUI {
 	constructor(scene) {
 		this.scene = scene;
 		this.scene.navHeight = 100;
+		this.totalRows = 6;
+		this.totalCols = 4;
 	}
 
 	createNavbar() {
@@ -419,6 +421,75 @@ export class GameUI {
 		this.scene.events.on("update", animateImage);
 	}
 
+	drawInvisibleGrid(
+		scale = { x: 1.12, y: 0, z: 1.27 },
+		positionOffset = { x: 0.23, y: 0, z: -0.02 }
+	) {
+		const config = this.scene.sys.game.config;
+
+		// Clean up existing grid
+		if (this.scene.gridGroup) {
+			this.scene.threeScene.remove(this.scene.gridGroup);
+			this.scene.gridGroup.children.forEach((box) => {
+				box.geometry.dispose();
+				box.material.dispose();
+			});
+			this.scene.gridGroup = null;
+		}
+
+		this.scene.invisibleBoxes = [];
+		this.scene.gridGroup = new THREE.Group();
+		this.scene.threeScene.add(this.scene.gridGroup);
+
+		// Base sizes
+		const baseWidth = 0.4;
+		const baseHeight = 0.025;
+		const baseDepth = 0.3;
+		const baseSpacing = 0.02;
+
+		// Scaled sizes
+		const boxWidth = baseWidth * scale.x;
+		const boxHeight = baseHeight * scale.y;
+		const boxDepth = baseDepth * scale.z;
+		const spacingX = baseSpacing * scale.x;
+		const spacingZ = baseSpacing * scale.z;
+
+		const rows = 6;
+		const cols = 4;
+
+		const totalWidth = cols * (boxWidth + spacingX) - spacingX;
+		const totalDepth = rows * (boxDepth + spacingZ) - spacingZ;
+
+		const startX = -totalWidth / 2 + positionOffset.x;
+		const startZ = -totalDepth / 2 + positionOffset.z;
+		const baseY = positionOffset.y;
+
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				const geometry = new THREE.BoxGeometry(1, 1, 1);
+				const material = new THREE.MeshBasicMaterial({
+					color: 0xff0000,
+					transparent: true,
+					opacity: 0.5,
+				});
+
+				const box = new THREE.Mesh(geometry, material);
+
+				// Set individual axis scales
+				box.scale.set(boxWidth, boxHeight, boxDepth);
+
+				const x = startX + col * (boxWidth + spacingX);
+				const z = startZ + row * (boxDepth + spacingZ);
+				box.position.set(x, baseY, z);
+
+				box.userData = { row, col };
+
+				this.scene.gridGroup.add(box);
+				this.scene.invisibleBoxes.push(box);
+			}
+		}
+	}
+
 	ResizeLandscape(config) {
 		console.log("Resize Landscape", config);
 
@@ -487,6 +558,13 @@ export class GameUI {
 			this.scene.moveCountText.setPosition(
 				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
 				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
+		}
+
+		if (this.scene.gridGroup) {
+			this.drawInvisibleGrid(
+				{ x: 1.09, y: 0, z: 1.08 },
+				{ x: 0.23, y: 0, z: -0.01 }
 			);
 		}
 	}
@@ -581,6 +659,13 @@ export class GameUI {
 			this.scene.moveCountText.setPosition(
 				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
 				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
+		}
+
+		if (this.scene.gridGroup) {
+			this.drawInvisibleGrid(
+				{ x: 1.21, y: 0, z: 1.18 },
+				{ x: 0.25, y: 0, z: 0.14 }
 			);
 		}
 	}

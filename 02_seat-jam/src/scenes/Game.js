@@ -15,6 +15,7 @@ export class Game extends Phaser.Scene {
 		this.movesLeft = 7;
 		this.startCell;
 		this.isRobotMoving = false;
+		this.invisibleBoxes = [];
 	}
 
 	init() {
@@ -165,7 +166,7 @@ export class Game extends Phaser.Scene {
 			this.threeRenderer.render(this.threeScene, this.camera);
 			this.gameLogic.checkWin();
 			this.gameLogic.checkLoss();
-			this.robots.forEach((robot) => {
+			this.robots?.forEach((robot) => {
 				if (robot.mixer) {
 					robot.mixer.update(this.game.loop.delta / 1000);
 				}

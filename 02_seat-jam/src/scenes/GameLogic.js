@@ -29,13 +29,13 @@ export class GameLogic {
 	}
 
 	startGame() {
+		this.gameUI.createMainScene();
 		this.createInvisibleGrid();
 
 		this.gameUI.createNavbar();
 		this.gameUI.createMovesBox();
-		this.gameUI.createMainScene();
 		this.gameUI.createFooter();
-		this.gameUI.loadModels();
+		// this.gameUI.loadModels();
 	}
 
 	getClickedCell(event) {
@@ -161,71 +161,13 @@ export class GameLogic {
 		this.tryMoveRobot(cell);
 	}
 
-	drawInvisibleGrid() {
-		const cellWidth = 0.41;
-		const cellHeight = 0.31;
-
-		const gridWidth = this.totalCols * cellWidth - 0.43;
-		const gridHeight =
-			this.totalRows * cellHeight -
-			(this.scene.scale.width < 500
-				? 0.4
-				: this.scene.scale.width > 1000
-				? 0.14
-				: 0.28);
-
-		const startX = -gridWidth / 2;
-		const startZ = -gridHeight / 2;
-
-		// Clear existing boxes
-		this.scene.invisibleBoxes.forEach((box) => {
-			this.scene.threeScene.remove(box);
-			box.geometry.dispose();
-			box.material.dispose();
-		});
-		this.scene.invisibleBoxes = [];
-
-		// Create new boxes
-		for (let row = 0; row < this.totalRows; row++) {
-			for (let col = 0; col < this.totalCols; col++) {
-				const logicBox = this.scene.grid.getCell(row, col);
-
-				// Create a transparent box (Mesh)
-				const geometry = new THREE.BoxGeometry(1, 1, 1);
-				const material = new THREE.MeshBasicMaterial({
-					color: 0xff0000,
-					transparent: true,
-					opacity: 0,
-				});
-
-				const box = new THREE.Mesh(geometry, material);
-				box.position.set(
-					startX + col * cellWidth,
-					0,
-					startZ + row * cellHeight
-				);
-				box.scale.set(0.39, 0.025, 0.29);
-				box.userData = { row, col };
-
-				logicBox.visual = box;
-				logicBox.isBlocked = false;
-
-				this.scene.threeScene.add(box);
-				this.scene.invisibleBoxes.push(box);
-			}
-		}
-	}
-
 	createInvisibleGrid() {
 		this.scene.grid = new Grid(this.totalRows, this.totalCols, this.seats);
 		this.scene.pathFinder = new PathFinder(this.scene.grid);
 		this.scene.invisibleBoxes = [];
 
 		// Initial Draw
-		this.drawInvisibleGrid();
-
-		// Redraw on resize
-		this.scene.scale.on("resize", this.drawInvisibleGrid, this);
+		this.gameUI.drawInvisibleGrid();
 
 		// Click on invisible boxes
 		this.scene.mouse = new THREE.Vector2();
