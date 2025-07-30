@@ -10,6 +10,7 @@ let mainSceneBgY;
 export class GameUI {
 	constructor(scene) {
 		this.scene = scene;
+		this.scene.navHeight = 100;
 	}
 
 	createNavbar() {
@@ -474,6 +475,20 @@ export class GameUI {
 			this.scene.navText.setPosition(width / 2, 25);
 			this.scene.navText.setStyle({ fontSize: "24px" });
 		}
+
+		if (this.scene.movesBox) {
+			const padding = 10;
+			const navbarHeight = this.scene.navHeight;
+			const canvasWidth = config.width;
+
+			this.scene.movesBox.x = canvasWidth;
+			this.scene.movesBox.y = navbarHeight + padding;
+
+			this.scene.moveCountText.setPosition(
+				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
+				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
+		}
 	}
 
 	ResizePortrait(config) {
@@ -553,6 +568,20 @@ export class GameUI {
 			const width = config.width;
 			this.scene.navText.setPosition(width / 2, this.scene.navHeight / 2);
 			this.scene.navText.setStyle({ fontSize: "64px" });
+		}
+
+		if (this.scene.movesBox) {
+			const padding = 30;
+			const navbarHeight = this.scene.navHeight;
+			const canvasWidth = config.width;
+
+			this.scene.movesBox.x = canvasWidth;
+			this.scene.movesBox.y = navbarHeight + padding;
+
+			this.scene.moveCountText.setPosition(
+				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
+				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
 		}
 	}
 }
