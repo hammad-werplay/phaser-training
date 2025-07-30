@@ -35,7 +35,7 @@ export class GameLogic {
 		this.gameUI.createNavbar();
 		this.gameUI.createMovesBox();
 		this.gameUI.createFooter();
-		// this.gameUI.loadModels();
+		this.gameUI.loadModels();
 	}
 
 	getClickedCell(event) {

@@ -289,6 +289,22 @@ export class GameUI {
 
 		const robotPositions = Utils.createGameScenario();
 
+		if (this.scene.robots) {
+			// Clean up existing robots
+			this.scene.robots.forEach((robot) => {
+				if (robot && robot.robot) {
+					this.scene.threeScene.remove(robot.robot);
+				}
+				if (robot && robot.nameLabel) {
+					this.scene.threeScene.remove(robot.nameLabel);
+				}
+				if (robot && robot.robotLabel) {
+					robot.robotLabel = null;
+				}
+			});
+			this.scene.robots = [];
+		}
+
 		this.scene.robots = robotPositions.map(({ seat, position }) => {
 			const cell = this.scene.grid.getCell(position[0], position[1]);
 			const robotModel = new Robot(robotModelRef);
@@ -466,6 +482,8 @@ export class GameUI {
 
 		for (let row = 0; row < rows; row++) {
 			for (let col = 0; col < cols; col++) {
+				const logicBox = this.scene.grid.getCell(row, col);
+
 				const geometry = new THREE.BoxGeometry(1, 1, 1);
 				const material = new THREE.MeshBasicMaterial({
 					color: 0xff0000,
@@ -483,6 +501,8 @@ export class GameUI {
 				box.position.set(x, baseY, z);
 
 				box.userData = { row, col };
+
+				logicBox.visual = box;
 
 				this.scene.gridGroup.add(box);
 				this.scene.invisibleBoxes.push(box);
@@ -564,8 +584,9 @@ export class GameUI {
 		if (this.scene.gridGroup) {
 			this.drawInvisibleGrid(
 				{ x: 1.09, y: 0, z: 1.08 },
-				{ x: 0.23, y: 0, z: -0.01 }
+				{ x: 0.23, y: 0, z: -0.11 }
 			);
+			this.loadModels();
 		}
 	}
 
@@ -664,9 +685,10 @@ export class GameUI {
 
 		if (this.scene.gridGroup) {
 			this.drawInvisibleGrid(
-				{ x: 1.21, y: 0, z: 1.18 },
-				{ x: 0.25, y: 0, z: 0.14 }
+				{ x: 1, y: 0, z: 0.98 },
+				{ x: 0.21, y: 0, z: 0.11 }
 			);
+			this.loadModels();
 		}
 	}
 }
