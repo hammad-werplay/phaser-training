@@ -3,9 +3,9 @@ class Cell {
 		this.row = row;
 		this.col = col;
 		this.type = type;
-		this.isBlocked = false;
 		this.visual = null;
 		this._robot = null;
+		this.isBlocked = false;
 		this.seatLabel = seatLabel;
 		this.robotObject;
 	}
@@ -118,6 +118,15 @@ export class Grid {
 			return null;
 		}
 		return this.cells[row][col];
+	}
+
+	setCell(row, col, cell) {
+		if (row < 0 || row > this.rows - 1 || col < 0 || col > this.cols - 1) {
+			console.error("Cell out of bounds:", row, col);
+			return;
+		}
+
+		this.cells[row][col] = cell;
 	}
 
 	/**

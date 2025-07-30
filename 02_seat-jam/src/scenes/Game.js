@@ -130,9 +130,9 @@ export class Game extends Phaser.Scene {
 
 			// Adjust based on orientation
 			if (orientation === "landscape") {
-				this.gameLogic.gameUI.ResizeLandscape(config);
+				this.gameLogic.ResizeLandscape(config);
 			} else {
-				this.gameLogic.gameUI.ResizePortrait(config);
+				this.gameLogic.ResizePortrait(config);
 			}
 			console.groupEnd();
 		};
@@ -154,6 +154,8 @@ export class Game extends Phaser.Scene {
 		this.ResizeHandler(config.orientation, config, this);
 
 		this.game.onResize();
+
+		console.log("Robot Models:", this.grid.cells);
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
