@@ -344,7 +344,7 @@ export class GameLogic {
 			!this.scene.gameWon &&
 			this.scene.grid &&
 			this.scene.grid.cells &&
-			!this.scene.grid.cells
+			this.scene.grid.cells
 				.flat()
 				.filter((cell) => cell.type === "seat")
 				.every(
@@ -545,6 +545,22 @@ export class GameLogic {
 			);
 			this.scene.gameOverText.setScale(1.2);
 		}
+
+		if (this.scene.gameOverOverlay) {
+			this.scene.gameOverOverlay.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.gameOverOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.failedCharactersImage) {
+			this.scene.failedCharactersImage.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.failedCharactersImage.setScale(0.7);
+		}
 	}
 
 	ResizePortrait(config) {
@@ -595,6 +611,22 @@ export class GameLogic {
 				config.height / 2 - 530
 			);
 			this.scene.gameOverText.setScale(2.1);
+		}
+
+		if (this.scene.gameOverOverlay) {
+			this.scene.gameOverOverlay.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.gameOverOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.failedCharactersImage) {
+			this.scene.failedCharactersImage.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.failedCharactersImage.setScale(1.2);
 		}
 	}
 }
