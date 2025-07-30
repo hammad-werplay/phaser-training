@@ -314,7 +314,18 @@ export class GameUI {
 		});
 	}
 
-	showCorrectSeatLabelImage(image) {
+	showCorrectSeatLabelImage(
+		image,
+		startScaleFactor = 0.7,
+		endScaleFactor = 1.4
+	) {
+		const config = this.scene.sys.game.config;
+		const aspectRatio = config.width / config.height;
+		if (aspectRatio > 0.6) {
+			startScaleFactor = startScaleFactor * 1.7;
+			endScaleFactor = endScaleFactor * 1.7;
+		}
+
 		let imageTexture;
 
 		if (this.scene.textures.exists(image)) {
@@ -383,8 +394,8 @@ export class GameUI {
 		const fadeInDuration = 300;
 		const holdDuration = 700;
 		const fadeOutDuration = 800;
-		const startScale = bigScale * 0.7;
-		const endScale = bigScale;
+		const startScale = startScaleFactor;
+		const endScale = endScaleFactor;
 
 		imageSprite.scale.set(startScale, startScale * 0.5, startScale);
 

@@ -344,7 +344,7 @@ export class GameLogic {
 			!this.scene.gameWon &&
 			this.scene.grid &&
 			this.scene.grid.cells &&
-			this.scene.grid.cells
+			!this.scene.grid.cells
 				.flat()
 				.filter((cell) => cell.type === "seat")
 				.every(
@@ -354,7 +354,19 @@ export class GameLogic {
 						cell.verifyCorrectSeatLabel()
 				)
 		) {
-			const { width, height } = this.scene.sys.game.canvas;
+			const config = this.scene.sys.game.config;
+			const { width, height } = config;
+
+			// Cleanup previous overlays
+			if (
+				this.scene.successOverlay &&
+				this.scene.successCharacterImage &&
+				this.scene.gameOverText
+			) {
+				this.scene.successOverlay.destroy();
+				this.scene.successCharacterImage.destroy();
+				this.scene.gameOverText.destroy();
+			}
 
 			// Create a semi-transparent overlay
 			this.scene.successOverlay = this.scene.add
@@ -510,6 +522,21 @@ export class GameLogic {
 			this.drawInvisibleGrid(scale, position);
 			this.gameUI.loadModels();
 		}
+
+		this.checkWin();
+		this.checkLoss();
+
+		if (this.scene.successOverlay) {
+			this.scene.successOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.successCharacterImage) {
+			this.scene.successCharacterImage.setPosition(
+				config.width / 2,
+				config.height / 2 - 50
+			);
+			this.scene.successCharacterImage.setScale(0.8);
+		}
 	}
 
 	ResizePortrait(config) {
@@ -537,6 +564,21 @@ export class GameLogic {
 
 			this.drawInvisibleGrid(scale, position);
 			this.gameUI.loadModels();
+		}
+
+		this.checkWin();
+		this.checkLoss();
+
+		if (this.scene.successOverlay) {
+			this.scene.successOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.successCharacterImage) {
+			this.scene.successCharacterImage.setPosition(
+				config.width / 2,
+				config.height / 2 - 50
+			);
+			this.scene.successCharacterImage.setScale(1.2);
 		}
 	}
 }

@@ -155,8 +155,6 @@ export class Game extends Phaser.Scene {
 
 		this.game.onResize();
 
-		console.log("Robot Models:", this.grid.cells);
-
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
 			onCtaPressed();
