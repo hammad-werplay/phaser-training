@@ -535,7 +535,15 @@ export class GameLogic {
 				config.width / 2,
 				config.height / 2 - 50
 			);
-			this.scene.successCharacterImage.setScale(0.8);
+			this.scene.successCharacterImage.setScale(0.7);
+		}
+
+		if (this.scene.gameOverText) {
+			this.scene.gameOverText.setPosition(
+				config.width / 2 - 100,
+				config.height / 2 - 280
+			);
+			this.scene.gameOverText.setScale(1.2);
 		}
 	}
 
@@ -579,6 +587,14 @@ export class GameLogic {
 				config.height / 2 - 50
 			);
 			this.scene.successCharacterImage.setScale(1.2);
+		}
+
+		if (this.scene.gameOverText) {
+			this.scene.gameOverText.setPosition(
+				config.width / 2 - 180,
+				config.height / 2 - 530
+			);
+			this.scene.gameOverText.setScale(2.1);
 		}
 	}
 }
