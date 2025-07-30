@@ -2,13 +2,21 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+		/>
 		<style>
+			html,
 			body {
 				margin: 0;
 				padding: 0;
 				color: rgba(255, 255, 255, 0.87);
 				background-color: skyblue;
+				height: 100%;
+				width: 100%;
+				position: relative;
+				overflow: hidden;
 			}
 
 			#app {
@@ -18,6 +26,17 @@
 				display: flex;
 				justify-content: center;
 				align-items: center;
+			}
+
+			canvas {
+				display: block;
+				position: absolute;
+				top: 0;
+				left: 0;
+				margin: 0;
+				padding: 0;
+				width: 100vw;
+				height: 100vh;
 			}
 		</style>
 		<title>Seat Jam Project</title>

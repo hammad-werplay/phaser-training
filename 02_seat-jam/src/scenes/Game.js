@@ -109,34 +109,33 @@ export class Game extends Phaser.Scene {
 
 			console.log("Resize Handler:", orientation, bw, bh);
 
-			if (this.isRenderingThree) {
-				// Update Three.js renderer size to match browser window
-				console.log("Updating Three.js renderer size:", bw, bh);
-				this.threeRenderer.setSize(bw, bh);
-			}
+			// if (this.isRenderingThree) {
+			// 	// Update Three.js renderer size to match browser window
+			// 	console.log("Updating Three.js renderer size:", bw, bh);
+			// 	this.threeRenderer.setSize(bw, bh);
+			// }
 
-			// Update camera aspect ratio
-			this.camera.aspect = bw / bh;
-			this.camera.updateProjectionMatrix();
-			console.log("Camera aspect ratio updated:", this.camera.aspect);
+			// // Update camera aspect ratio
+			// this.camera.aspect = bw / bh;
+			// this.camera.updateProjectionMatrix();
+			// console.log("Camera aspect ratio updated:", this.camera.aspect);
 
 			// Adjust Three.js canvas position to match Phaser canvas
-			const phaserCanvas = this.scale.canvas;
-			const phaserRect = phaserCanvas.getBoundingClientRect();
+			// const phaserCanvas = this.scale.canvas;
+			// const phaserRect = phaserCanvas.getBoundingClientRect();
 
-			this.threeCanvas.style.top = phaserRect.top + "px";
-			this.threeCanvas.style.left = phaserRect.left + "px";
-			this.threeCanvas.style.width = phaserRect.width + "px";
-			this.threeCanvas.style.height = phaserRect.height + "px";
+			// this.threeCanvas.style.top = phaserRect.top + "px";
+			// this.threeCanvas.style.left = phaserRect.left + "px";
+			// this.threeCanvas.style.width = phaserRect.width + "px";
+			// this.threeCanvas.style.height = phaserRect.height + "px";
 
-			console.log(
-				"Three.js canvas adjusted to Phaser canvas dimensions:",
-				phaserRect
-			);
+			// console.log(
+			// 	"Three.js canvas adjusted to Phaser canvas dimensions:",
+			// 	phaserRect
+			// );
 
 			// Adjust based on orientation
 			if (orientation === "landscape") {
-				console.log(this.gameLogic.gameUI);
 				this.gameLogic.gameUI.ResizeLandscape(config);
 			} else {
 				this.gameLogic.gameUI.ResizePortrait(config);
@@ -152,14 +151,15 @@ export class Game extends Phaser.Scene {
 		console.log("Game Config:", config);
 
 		this.loadedModels = this.registry.get("loadedModels");
-		this.setupThreeJS();
+		// this.setupThreeJS();
 
 		this.gameLogic = new GameLogic(this);
 
 		this.gameLogic.startGame();
-		this.game.onResize();
 
 		this.ResizeHandler(config.orientation, config, this);
+
+		this.game.onResize();
 
 		this.input.on("pointerdown", () => {
 			this.sound.play("sound_fx");
@@ -169,18 +169,15 @@ export class Game extends Phaser.Scene {
 
 	update() {
 		if (this.threeRenderer) {
-			this.threeRenderer.render(this.threeScene, this.camera);
-
-			this.gameLogic.checkWin();
-			this.gameLogic.checkLoss();
-
-			this.robots.forEach((robot) => {
-				if (robot.mixer) {
-					robot.mixer.update(this.game.loop.delta / 1000);
-				}
-
-				robot.updateLabelPosition(this.camera);
-			});
+			// this.threeRenderer.render(this.threeScene, this.camera);
+			// this.gameLogic.checkWin();
+			// this.gameLogic.checkLoss();
+			// this.robots.forEach((robot) => {
+			// 	if (robot.mixer) {
+			// 		robot.mixer.update(this.game.loop.delta / 1000);
+			// 	}
+			// 	robot.updateLabelPosition(this.camera);
+			// });
 		}
 	}
 }

@@ -13,58 +13,36 @@ export class GameUI {
 	}
 
 	createNavbar() {
-		const barHeight = 50;
+		const config = this.scene.sys.game.config;
+		const width = config.width;
+		const height = 50;
 
-		// nav background
-		this.scene.navbarBg = this.scene.add.graphics();
-
-		// centered text
-		this.scene.navbarText = this.scene.add.text(
+		// Create a semi-transparent rectangle for the navbar
+		this.scene.navbar = this.scene.add.rectangle(
 			0,
 			0,
-			"Can You Pass This level in 7 Moves?",
-			{
-				fontFamily: "MADE Tommy Soft",
-				fontSize: "20px",
-				color: "#ffffff",
-				fontStyle: "bold",
-				align: "center",
-			}
+			width,
+			height,
+			0x000000,
+			0.5
 		);
+		this.scene.navbar.setOrigin(0, 0);
 
-		const drawNavbar = () => {
-			const canvasWidth = this.scene.scale.width;
-
-			// Calculate font size
-			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
-			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
-			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
-				fontSize -= 1;
-				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
-			}
-
-			// Calculate nav height
-			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
-
-			// Draw background bar
-			this.scene.navbarBg.clear();
-			this.scene.navbarBg.fillStyle(0x000000, 1);
-			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
-
-			// Center the text horizontally and vertically
-			this.scene.navbarText.x =
-				canvasWidth / 2 - this.scene.navbarText.width / 2;
-			this.scene.navbarText.y =
-				dynamicBarHeight / 2 - this.scene.navbarText.height / 2;
-
-			// Store nav height
-			this.scene.navbarHeight = dynamicBarHeight;
+		// Add a text label to the navbar
+		const textStyle = {
+			font: "16px sans-serif",
+			fill: "#fff",
+			align: "center",
+			fontStyle: "bold",
 		};
-
-		drawNavbar();
-
-		// Redraw on resize
-		// this.scene.scale.on("resize", drawNavbar, this.scene);
+		const text = "Can You Pass This level in 7 Moves?";
+		this.scene.navText = this.scene.add.text(
+			width / 2,
+			height / 2,
+			text,
+			textStyle
+		);
+		this.scene.navText.setOrigin(0.5, 0.5);
 	}
 
 	createMovesBox() {
@@ -470,7 +448,10 @@ export class GameUI {
 			// Fix at the top
 			const navBarX = 0;
 			const navBarY = 0;
-			this.scene.navbarBg.setPosition(navBarX, navBarY);
+			// this.scene.navbarBg.setPosition(navBarX, navBarY);
+			this.scene.navbarBg.setSize(canvasWidth, dynamicBarHeight);
+
+			console.log("Navbar resized:", this.scene.navbarBg);
 
 			// Font size
 			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
@@ -479,11 +460,19 @@ export class GameUI {
 				fontSize -= 1;
 				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
 			}
+		}
 
-			// Draw background bar
-			this.scene.navbarBg.clear();
-			this.scene.navbarBg.fillStyle(0x000000, 1);
-			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
+		if (this.scene.navbar) {
+			const width = config.width;
+			const height = 50;
+			this.scene.navbar.setSize(width, height);
+			this.scene.navbar.setPosition(0, 0);
+		}
+
+		if (this.scene.navText) {
+			const width = config.width;
+			this.scene.navText.setPosition(width / 2, 25);
+			this.scene.navText.setStyle({ fontSize: "24px" });
 		}
 	}
 
@@ -537,7 +526,10 @@ export class GameUI {
 			// Fix at the top
 			const navBarX = 0;
 			const navBarY = 0;
-			this.scene.navbarBg.setPosition(navBarX, navBarY);
+			// this.scene.navbarBg.setPosition(navBarX, navBarY);
+			this.scene.navbarBg.setSize(canvasWidth, dynamicBarHeight);
+
+			console.log("Navbar resized:", this.scene.navbarBg);
 
 			// Font size
 			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
@@ -546,11 +538,21 @@ export class GameUI {
 				fontSize -= 1;
 				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
 			}
+		}
 
-			// Draw background bar
-			this.scene.navbarBg.clear();
-			this.scene.navbarBg.fillStyle(0x000000, 1);
-			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
+		if (this.scene.navbar) {
+			const width = config.width;
+			let height = 100;
+
+			this.scene.navHeight = height;
+			this.scene.navbar.setSize(width, height);
+			this.scene.navbar.setPosition(0, 0);
+		}
+
+		if (this.scene.navText) {
+			const width = config.width;
+			this.scene.navText.setPosition(width / 2, this.scene.navHeight / 2);
+			this.scene.navText.setStyle({ fontSize: "64px" });
 		}
 	}
 }

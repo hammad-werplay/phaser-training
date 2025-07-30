@@ -29,13 +29,13 @@ export class GameLogic {
 	}
 
 	startGame() {
-		this.createInvisibleGrid();
+		// this.createInvisibleGrid();
 
 		this.gameUI.createNavbar();
 		this.gameUI.createMovesBox();
 		this.gameUI.createMainScene();
 		this.gameUI.createFooter();
-		this.gameUI.loadModels();
+		// this.gameUI.loadModels();
 	}
 
 	getClickedCell(event) {

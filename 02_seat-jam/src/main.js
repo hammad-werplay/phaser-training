@@ -49,8 +49,6 @@ function setupGameInitialization(adNetworkType) {
 		this.config.width = Math.max(new_width, room_width);
 		this.config.height = Math.max(new_height, room_height);
 
-		console.log("Resize to:", this.config.width, this.config.height);
-
 		this.scale.setZoom(bh / this.config.height);
 		this.scale.resize(this.config.width, this.config.height);
 		this.scale.refresh();
