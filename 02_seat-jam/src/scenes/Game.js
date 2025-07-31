@@ -15,6 +15,7 @@ export class Game extends Phaser.Scene {
 		this.movesLeft = 7;
 		this.startCell;
 		this.isRobotMoving = false;
+		this.invisibleBoxes = [];
 	}
 
 	init() {
@@ -101,8 +102,47 @@ export class Game extends Phaser.Scene {
 		window.addEventListener("resize", setupCamera);
 	}
 
+	ResizeHandler(orientation, config, scene) {
+		this.onResize = function (orientation) {
+			console.groupCollapsed("Resize Handler");
+			const bw = window.innerWidth;
+			const bh = window.innerHeight;
+
+			console.log("Resize Handler:", orientation, bw, bh);
+
+			if (this.isRenderingThree) {
+				// Update Three.js renderer size to match browser window
+				this.threeRenderer.setSize(bw, bh);
+			}
+
+			// Update camera aspect ratio
+			this.camera.aspect = bw / bh;
+			this.camera.updateProjectionMatrix();
+
+			// Adjust Three.js canvas position to match Phaser canvas
+			const phaserCanvas = this.scale.canvas;
+			const phaserRect = phaserCanvas.getBoundingClientRect();
+
+			this.threeCanvas.style.top = phaserRect.top + "px";
+			this.threeCanvas.style.left = phaserRect.left + "px";
+			this.threeCanvas.style.width = phaserRect.width + "px";
+			this.threeCanvas.style.height = phaserRect.height + "px";
+
+			// Adjust based on orientation
+			if (orientation === "landscape") {
+				this.gameLogic.ResizeLandscape(config);
+			} else {
+				this.gameLogic.ResizePortrait(config);
+			}
+			console.groupEnd();
+		};
+	}
+
 	create() {
 		this.adNetworkSetup();
+
+		let config = this.sys.game.config;
+		console.log("Game Config:", config);
 
 		this.loadedModels = this.registry.get("loadedModels");
 		this.setupThreeJS();
@@ -110,6 +150,9 @@ export class Game extends Phaser.Scene {
 		this.gameLogic = new GameLogic(this);
 
 		this.gameLogic.startGame();
+
+		this.ResizeHandler(config.orientation, config, this);
+
 		this.game.onResize();
 
 		this.input.on("pointerdown", () => {
@@ -121,15 +164,12 @@ export class Game extends Phaser.Scene {
 	update() {
 		if (this.threeRenderer) {
 			this.threeRenderer.render(this.threeScene, this.camera);
-
 			this.gameLogic.checkWin();
 			this.gameLogic.checkLoss();
-
-			this.robots.forEach((robot) => {
+			this.robots?.forEach((robot) => {
 				if (robot.mixer) {
 					robot.mixer.update(this.game.loop.delta / 1000);
 				}
-
 				robot.updateLabelPosition(this.camera);
 			});
 		}

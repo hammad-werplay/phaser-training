@@ -161,21 +161,20 @@ export class GameLogic {
 		this.tryMoveRobot(cell);
 	}
 
-	drawInvisibleGrid() {
-		const cellWidth = 0.41;
-		const cellHeight = 0.31;
+	drawInvisibleGrid(
+		scale = { x: 0.39, y: 0.025, z: 0.29 },
+		position = { x: -0.6, y: 0, z: -0.84 }
+	) {
+		const gap = 0.01;
 
-		const gridWidth = this.totalCols * cellWidth - 0.43;
-		const gridHeight =
-			this.totalRows * cellHeight -
-			(this.scene.scale.width < 500
-				? 0.4
-				: this.scene.scale.width > 1000
-				? 0.14
-				: 0.28);
+		const spacingX = scale.x + gap;
+		const spacingZ = scale.z + gap;
 
-		const startX = -gridWidth / 2;
-		const startZ = -gridHeight / 2;
+		const gridWidth = this.totalCols * spacingX;
+		const gridHeight = this.totalRows * spacingZ;
+
+		const startX = position.x;
+		const startZ = position.z;
 
 		// Clear existing boxes
 		this.scene.invisibleBoxes.forEach((box) => {
@@ -200,15 +199,14 @@ export class GameLogic {
 
 				const box = new THREE.Mesh(geometry, material);
 				box.position.set(
-					startX + col * cellWidth,
-					0,
-					startZ + row * cellHeight
+					startX + col * spacingX,
+					position.y,
+					startZ + row * spacingZ
 				);
-				box.scale.set(0.39, 0.025, 0.29);
+				box.scale.set(scale.x, scale.y, scale.z);
 				box.userData = { row, col };
 
 				logicBox.visual = box;
-				logicBox.isBlocked = false;
 
 				this.scene.threeScene.add(box);
 				this.scene.invisibleBoxes.push(box);
@@ -356,7 +354,19 @@ export class GameLogic {
 						cell.verifyCorrectSeatLabel()
 				)
 		) {
-			const { width, height } = this.scene.sys.game.canvas;
+			const config = this.scene.sys.game.config;
+			const { width, height } = config;
+
+			// Cleanup previous overlays
+			if (
+				this.scene.successOverlay &&
+				this.scene.successCharacterImage &&
+				this.scene.gameOverText
+			) {
+				this.scene.successOverlay.destroy();
+				this.scene.successCharacterImage.destroy();
+				this.scene.gameOverText.destroy();
+			}
 
 			// Create a semi-transparent overlay
 			this.scene.successOverlay = this.scene.add
@@ -483,6 +493,140 @@ export class GameLogic {
 			this.gameUI.createDownloadBtn();
 
 			this.scene.threeCanvas.style.zIndex = "-1";
+		}
+	}
+
+	ResizeLandscape(config) {
+		this.gameUI.ResizeLandscape(config);
+
+		if (this.scene.grid) {
+			const aspectRatio = config.width / config.height;
+
+			let scale = { x: 0.44, y: 0.025, z: 0.33 };
+			let position = { x: -0.64, y: 0, z: -1.14 };
+
+			if (aspectRatio > 1.3 && aspectRatio < 1.35) {
+				// Ipad pro -- 1.33
+				scale = { x: 0.44, y: 0.025, z: 0.33 };
+				position = { x: -0.66, y: 0, z: -1 };
+			} else if (aspectRatio > 1.4 && aspectRatio < 1.45) {
+				// Ipad air -- 1.43
+				scale = { x: 0.44, y: 0.025, z: 0.32 };
+				position = { x: -0.66, y: 0, z: -0.98 };
+			} else if (aspectRatio > 1.75 && aspectRatio < 1.8) {
+				// Iphone SE -- 1.77
+				scale = { x: 0.44, y: 0.025, z: 0.33 };
+				position = { x: -0.66, y: 0, z: -1.03 };
+			}
+
+			this.drawInvisibleGrid(scale, position);
+			this.gameUI.loadModels();
+		}
+
+		this.checkWin();
+		this.checkLoss();
+
+		if (this.scene.successOverlay) {
+			this.scene.successOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.successCharacterImage) {
+			this.scene.successCharacterImage.setPosition(
+				config.width / 2,
+				config.height / 2 - 50
+			);
+			this.scene.successCharacterImage.setScale(0.7);
+		}
+
+		if (this.scene.gameOverText) {
+			this.scene.gameOverText.setPosition(
+				config.width / 2 - 100,
+				config.height / 2 - 280
+			);
+			this.scene.gameOverText.setScale(1.2);
+		}
+
+		if (this.scene.gameOverOverlay) {
+			this.scene.gameOverOverlay.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.gameOverOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.failedCharactersImage) {
+			this.scene.failedCharactersImage.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.failedCharactersImage.setScale(0.7);
+		}
+	}
+
+	ResizePortrait(config) {
+		this.gameUI.ResizePortrait(config);
+
+		if (this.scene.grid) {
+			const aspectRatio = config.width / config.height;
+
+			let scale = { x: 0.4, y: 0.025, z: 0.3 };
+			let position = { x: -0.6, y: 0, z: -0.83 };
+
+			if (aspectRatio > 0.7 && aspectRatio < 0.77) {
+				// Ipad pro -- 0.74
+				scale = { x: 0.45, y: 0.025, z: 0.32 };
+				position = { x: -0.66, y: 0, z: -0.9 };
+			} else if (aspectRatio > 0.65 && aspectRatio < 0.7) {
+				// Ipad air -- 0.69
+				scale = { x: 0.44, y: 0.025, z: 0.32 };
+				position = { x: -0.66, y: 0, z: -0.89 };
+			} else if (aspectRatio > 0.55 && aspectRatio < 0.6) {
+				// Iphone SE -- 0.56
+				scale = { x: 0.49, y: 0.025, z: 0.36 };
+				position = { x: -0.73, y: 0, z: -0.96 };
+			}
+
+			this.drawInvisibleGrid(scale, position);
+			this.gameUI.loadModels();
+		}
+
+		this.checkWin();
+		this.checkLoss();
+
+		if (this.scene.successOverlay) {
+			this.scene.successOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.successCharacterImage) {
+			this.scene.successCharacterImage.setPosition(
+				config.width / 2,
+				config.height / 2 - 50
+			);
+			this.scene.successCharacterImage.setScale(1.2);
+		}
+
+		if (this.scene.gameOverText) {
+			this.scene.gameOverText.setPosition(
+				config.width / 2 - 180,
+				config.height / 2 - 530
+			);
+			this.scene.gameOverText.setScale(2.1);
+		}
+
+		if (this.scene.gameOverOverlay) {
+			this.scene.gameOverOverlay.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.gameOverOverlay.setSize(config.width, config.height);
+		}
+
+		if (this.scene.failedCharactersImage) {
+			this.scene.failedCharactersImage.setPosition(
+				config.width / 2,
+				config.height / 2
+			);
+			this.scene.failedCharactersImage.setScale(1.2);
 		}
 	}
 }

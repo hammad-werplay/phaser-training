@@ -2,64 +2,50 @@ import * as THREE from "three";
 import { Robot } from "./Robot";
 import { Utils } from "./Utils";
 
+let mainSceneBgScaleX;
+let mainSceneBgScaleY;
+let mainSceneBgX;
+let mainSceneBgY;
+
 export class GameUI {
 	constructor(scene) {
 		this.scene = scene;
+		this.scene.navHeight = 100;
+		this.totalRows = 6;
+		this.totalCols = 4;
 	}
 
 	createNavbar() {
-		const barHeight = 50;
+		const config = this.scene.sys.game.config;
+		const width = config.width;
+		const height = 50;
 
-		// nav background
-		this.scene.navbarBg = this.scene.add.graphics();
-
-		// centered text
-		this.scene.navbarText = this.scene.add.text(
+		// Create a semi-transparent rectangle for the navbar
+		this.scene.navbar = this.scene.add.rectangle(
 			0,
 			0,
-			"Can You Pass This level in 7 Moves?",
-			{
-				fontFamily: "MADE Tommy Soft",
-				fontSize: "20px",
-				color: "#ffffff",
-				fontStyle: "bold",
-				align: "center",
-			}
+			width,
+			height,
+			0x000000,
+			1
 		);
+		this.scene.navbar.setOrigin(0, 0);
 
-		const drawNavbar = () => {
-			const canvasWidth = this.scene.scale.width;
-
-			// Calculate font size
-			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
-			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
-			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
-				fontSize -= 1;
-				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
-			}
-
-			// Calculate nav height
-			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
-
-			// Draw background bar
-			this.scene.navbarBg.clear();
-			this.scene.navbarBg.fillStyle(0x000000, 1);
-			this.scene.navbarBg.fillRect(0, 0, canvasWidth, dynamicBarHeight);
-
-			// Center the text horizontally and vertically
-			this.scene.navbarText.x =
-				canvasWidth / 2 - this.scene.navbarText.width / 2;
-			this.scene.navbarText.y =
-				dynamicBarHeight / 2 - this.scene.navbarText.height / 2;
-
-			// Store nav height
-			this.scene.navbarHeight = dynamicBarHeight;
+		// Add a text label to the navbar
+		const textStyle = {
+			font: "16px sans-serif",
+			fill: "#fff",
+			align: "center",
+			fontStyle: "bold",
 		};
-
-		drawNavbar();
-
-		// Redraw on resize
-		this.scene.scale.on("resize", drawNavbar, this.scene);
+		const text = "Can You Pass This level in 7 Moves?";
+		this.scene.navText = this.scene.add.text(
+			width / 2,
+			height / 2,
+			text,
+			textStyle
+		);
+		this.scene.navText.setOrigin(0.5, 0.5);
 	}
 
 	createMovesBox() {
@@ -244,7 +230,7 @@ export class GameUI {
 		drawMainScene();
 
 		// Redraw on resize
-		this.scene.scale.on("resize", drawMainScene, this.scene);
+		// this.scene.scale.on("resize", drawMainScene, this.scene);
 	}
 
 	createDownloadBtn() {
@@ -303,15 +289,43 @@ export class GameUI {
 
 		const robotPositions = Utils.createGameScenario();
 
+		if (this.scene.robots) {
+			// Clean up existing robots
+			this.scene.robots.forEach((robot) => {
+				if (robot && robot.robot) {
+					this.scene.threeScene.remove(robot.robot);
+				}
+				if (robot && robot.nameLabel) {
+					this.scene.threeScene.remove(robot.nameLabel);
+				}
+				if (robot && robot.robotLabel) {
+					robot.robotLabel = null;
+				}
+			});
+			this.scene.robots = [];
+		}
+
 		this.scene.robots = robotPositions.map(({ seat, position }) => {
-			const cell = this.scene.grid.getCell(position[0], position[1]);
+			const [row, col] = position;
+			const cell = this.scene.grid.getCell(row, col);
 			const robotModel = new Robot(robotModelRef);
 			robotModel.attachTo(cell, this.scene.threeScene, undefined, seat);
 			return robotModel;
 		});
 	}
 
-	showCorrectSeatLabelImage(image) {
+	showCorrectSeatLabelImage(
+		image,
+		startScaleFactor = 0.7,
+		endScaleFactor = 1.4
+	) {
+		const config = this.scene.sys.game.config;
+		const aspectRatio = config.width / config.height;
+		if (aspectRatio > 0.6) {
+			startScaleFactor = startScaleFactor * 1.7;
+			endScaleFactor = endScaleFactor * 1.7;
+		}
+
 		let imageTexture;
 
 		if (this.scene.textures.exists(image)) {
@@ -380,8 +394,8 @@ export class GameUI {
 		const fadeInDuration = 300;
 		const holdDuration = 700;
 		const fadeOutDuration = 800;
-		const startScale = bigScale * 0.7;
-		const endScale = bigScale;
+		const startScale = startScaleFactor;
+		const endScale = endScaleFactor;
 
 		imageSprite.scale.set(startScale, startScale * 0.5, startScale);
 
@@ -433,5 +447,171 @@ export class GameUI {
 
 		// Listen to the scene's update event (Phaser's event emitter)
 		this.scene.events.on("update", animateImage);
+	}
+
+	ResizeLandscape(config) {
+		console.log("Resize Landscape", config);
+
+		// Main Scene
+		if (this.scene.mainSceneBg) {
+			// Scale
+			mainSceneBgScaleX = config.width / this.scene.mainSceneBg.width;
+			mainSceneBgScaleY = config.height / this.scene.mainSceneBg.height;
+			const minScale = 0.6;
+			let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+			scale = Math.max(scale, minScale);
+			this.scene.mainSceneBg.setScale(scale);
+
+			// Position
+			const navHeight = this.scene.navbarHeight || 50;
+			const footerHeight = this.scene.footerImage?.displayHeight || 100;
+			const availableHeight = config.height - navHeight - footerHeight;
+			mainSceneBgX = config.width / 2;
+			mainSceneBgY = navHeight + availableHeight / 2;
+			this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+		}
+
+		// Navbar
+		if (this.scene.navbarBg) {
+			const canvasWidth = config.width;
+			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
+
+			// Fix at the top
+			const navBarX = 0;
+			const navBarY = 0;
+			// this.scene.navbarBg.setPosition(navBarX, navBarY);
+			this.scene.navbarBg.setSize(canvasWidth, dynamicBarHeight);
+
+			console.log("Navbar resized:", this.scene.navbarBg);
+
+			// Font size
+			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
+			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
+				fontSize -= 1;
+				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			}
+		}
+
+		if (this.scene.navbar) {
+			const width = config.width;
+			const height = 50;
+			this.scene.navbar.setSize(width, height);
+			this.scene.navbar.setPosition(0, 0);
+		}
+
+		if (this.scene.navText) {
+			const width = config.width;
+			this.scene.navText.setPosition(width / 2, 25);
+			this.scene.navText.setStyle({ fontSize: "24px" });
+		}
+
+		if (this.scene.movesBox) {
+			const padding = 10;
+			const navbarHeight = this.scene.navHeight;
+			const canvasWidth = config.width;
+
+			this.scene.movesBox.x = canvasWidth;
+			this.scene.movesBox.y = navbarHeight + padding;
+
+			this.scene.moveCountText.setPosition(
+				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
+				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
+		}
+	}
+
+	ResizePortrait(config) {
+		console.log("Resize Portrait", config);
+
+		let aspectRatio = config.width / config.height;
+
+		// Main Scene
+		if (this.scene.mainSceneBg) {
+			if (aspectRatio < 0.6) {
+				// Scale
+				mainSceneBgScaleX = 2.2;
+				mainSceneBgScaleY = 2.2;
+				const minScale = 0.6;
+				let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+				scale = Math.max(scale, minScale);
+				this.scene.mainSceneBg.setScale(scale);
+
+				// Position
+				const navHeight = this.scene.navbarHeight || 50;
+				const footerHeight = this.scene.footerImage?.displayHeight || 100;
+				const availableHeight = config.height - navHeight - footerHeight;
+				mainSceneBgX = config.width / 2;
+				mainSceneBgY = navHeight + availableHeight / 2;
+				this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+			} else {
+				// Scale
+				mainSceneBgScaleX = config.width / this.scene.mainSceneBg.width;
+				mainSceneBgScaleY = config.height / this.scene.mainSceneBg.height;
+				const minScale = 0.6;
+				let scale = Math.min(mainSceneBgScaleX, mainSceneBgScaleY);
+				scale = Math.max(scale, minScale);
+				this.scene.mainSceneBg.setScale(scale);
+
+				// Position
+				const navHeight = this.scene.navbarHeight || 50;
+				const footerHeight = this.scene.footerImage?.displayHeight || 100;
+				const availableHeight = config.height - navHeight - footerHeight;
+				mainSceneBgX = config.width / 2;
+				mainSceneBgY = navHeight + availableHeight / 2;
+				this.scene.mainSceneBg.setPosition(mainSceneBgX, mainSceneBgY);
+			}
+		}
+
+		// Navbar
+		if (this.scene.navbarBg) {
+			const canvasWidth = config.width;
+			const dynamicBarHeight = Math.max(50, this.scene.navbarText.height + 20);
+
+			// Fix at the top
+			const navBarX = 0;
+			const navBarY = 0;
+			// this.scene.navbarBg.setPosition(navBarX, navBarY);
+			this.scene.navbarBg.setSize(canvasWidth, dynamicBarHeight);
+
+			console.log("Navbar resized:", this.scene.navbarBg);
+
+			// Font size
+			let fontSize = Math.max(16, Math.min(64, Math.floor(canvasWidth * 0.05)));
+			this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			while (this.scene.navbarText.width > canvasWidth * 0.9 && fontSize > 10) {
+				fontSize -= 1;
+				this.scene.navbarText.setStyle({ fontSize: `${fontSize}px` });
+			}
+		}
+
+		if (this.scene.navbar) {
+			const width = config.width;
+			let height = 100;
+
+			this.scene.navHeight = height;
+			this.scene.navbar.setSize(width, height);
+			this.scene.navbar.setPosition(0, 0);
+		}
+
+		if (this.scene.navText) {
+			const width = config.width;
+			this.scene.navText.setPosition(width / 2, this.scene.navHeight / 2);
+			this.scene.navText.setStyle({ fontSize: "64px" });
+		}
+
+		if (this.scene.movesBox) {
+			const padding = 30;
+			const navbarHeight = this.scene.navHeight;
+			const canvasWidth = config.width;
+
+			this.scene.movesBox.x = canvasWidth;
+			this.scene.movesBox.y = navbarHeight + padding;
+
+			this.scene.moveCountText.setPosition(
+				this.scene.movesBox.x - this.scene.movesBox.displayWidth / 2 + 15,
+				this.scene.movesBox.y + this.scene.movesBox.displayHeight / 2
+			);
+		}
 	}
 }
