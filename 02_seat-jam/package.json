@@ -1,32 +1,35 @@
 {
-  "name": "playable-template",
-  "version": "1.4.0",
-  "description": "A Phaser 3 Template for Playable Ads",
-  "main": "src/main.js",
-  "private": true,
-  "scripts": {
-    "base64": "node base64encoder.mjs",
-    "dev": "vite --config vite/config.dev.mjs",
-    "build:all": "node build-all-networks.js",
-    "build:split": "vite build --config vite/config-split.prod.mjs",
-    "build:inline": "vite build --config vite/config-inline.prod.mjs"
-  },
-  "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
-  "license": "UNLICENSED",
-  "dependencies": {
-    "@originjs/vite-plugin-content": "^1.0.5",
-    "enquirer": "^2.4.1",
-    "lil-gui": "^0.20.0",
-    "three": "^0.178.0",
-    "vite": "^6.0.5",
-    "vite-plugin-string": "^1.2.3"
-  },
-  "devDependencies": {
-    "phaser": "^3.88.2",
-    "terser": "^5.37.0",
-    "vite-plugin-html": "^3.2.2",
-    "vite-plugin-html-injection": "^1.4.2",
-    "vite-plugin-singlefile": "^2.1.0",
-    "vite-plugin-zip-pack": "^1.2.4"
-  }
+	"name": "playable-template",
+	"version": "1.3.0",
+	"description": "A Phaser 3 Template for Playable Ads",
+	"main": "src/main.js",
+	"private": true,
+	"scripts": {
+		"base64": "node base64encoder.mjs",
+		"dev": "vite --config vite/config.dev.mjs",
+		"prebuild": "node inlineMediaData.js",
+		"build:all": "node build-all-networks.js",
+		"build:split": "vite build --config vite/config-split.prod.mjs",
+		"build:inline": "npm run prebuild && vite build --config vite/config-inline.prod.mjs  && node move-html.mjs",
+		"build:mintegral": "vite build --config vite/config-mintegral.mjs"
+	},
+	"author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
+	"license": "UNLICENSED",
+	"dependencies": {
+		"@originjs/vite-plugin-content": "^1.0.5",
+		"cannon-es": "^0.20.0",
+		"enquirer": "^2.4.1",
+		"three": "^0.174.0",
+		"three.quarks": "^0.16.0",
+		"vite": "^6.0.5",
+		"vite-plugin-string": "^1.2.3"
+	},
+	"devDependencies": {
+		"phaser": "^3.88.2",
+		"terser": "^5.37.0",
+		"vite-plugin-html": "^3.2.2",
+		"vite-plugin-html-injection": "^1.4.2",
+		"vite-plugin-singlefile": "^2.1.0",
+		"vite-plugin-zip-pack": "^1.2.4"
+	}
 }

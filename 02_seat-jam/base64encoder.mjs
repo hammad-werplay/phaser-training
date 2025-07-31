@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 /**
  * Encodes files in a folder (and sub-folders) to Base64 and writes JS export files.
@@ -7,61 +7,117 @@ import path from 'path';
  * @param {string} outputFolder - The folder to save the generated JS files.
  */
 async function encodeFilesToBase64(inputFolder, outputFolder) {
-  // Clear the output folder before starting
-  if (fs.existsSync(outputFolder)) {
-    fs.rmSync(outputFolder, { recursive: true, force: true });
-  }
-  fs.mkdirSync(outputFolder, { recursive: true });
+	const objectEntries = [];
 
-  const imports = [];
+	// Recursive function to process files
+	async function processFolder(folder) {
+		const entries = fs.readdirSync(folder, { withFileTypes: true });
 
-  // Recursive function to process files
-  async function processFolder(folder) {
-    const entries = fs.readdirSync(folder, { withFileTypes: true });
+		for (const entry of entries) {
+			const fullPath = path.join(folder, entry.name);
 
-    for (const entry of entries) {
-      const fullPath = path.join(folder, entry.name);
+			if (entry.isDirectory()) {
+				// Recurse into sub-folder
+				await processFolder(fullPath);
+			} else if (entry.isFile()) {
+				const relativePath = path.relative(inputFolder, fullPath);
+				const fileNameWithoutExt = path.parse(entry.name).name;
+				const fileExt = path.extname(entry.name).slice(1);
+				const fileContent = fs.readFileSync(fullPath);
+				const base64Content = fileContent.toString("base64");
+				const mimeType = getMimeType(fileExt);
+				const exportName = `${camelCase(
+					fileNameWithoutExt
+				)}${fileExt.toUpperCase()}`;
 
-      if (entry.isDirectory()) {
-        // Recurse into sub-folder
-        await processFolder(fullPath);
-      } else if (entry.isFile()) {
-        const relativePath = path.relative(inputFolder, fullPath);
-        const fileNameWithoutExt = path.parse(entry.name).name;
-        const fileExt = path.extname(entry.name).slice(1); // Remove the leading dot
+				objectEntries.push(
+					`"${exportName}": "data:${mimeType};base64,${base64Content}"`
+				);
 
-        // Read the file and encode it to Base64
-        const fileContent = fs.readFileSync(fullPath);
-        const base64Content = fileContent.toString('base64');
+				console.log(`Processed: ${entry.name}`);
+			}
+		}
+	}
 
-        // Determine the MIME type for known file types
-        const mimeType = getMimeType(fileExt);
+	await processFolder(inputFolder);
 
-        // Create the export string
-        const exportName = `${camelCase(fileNameWithoutExt)}${fileExt.toUpperCase()}`;
-        const exportContent = `export const ${exportName} = "data:${mimeType};base64,${base64Content}";`;
+	const htmlPath = path.resolve("index.html");
+	let html = fs.readFileSync(htmlPath, "utf-8");
 
-        // Write to a .js file in the output folder
-        const outputFilePath = path.join(outputFolder, relativePath.replace(/\\|\//g, '_') + '.js');
-        fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
-        fs.writeFileSync(outputFilePath, exportContent);
+	const constantsObject = `window.mediaData = {\n  ${objectEntries.join(
+		",\n  "
+	)}\n};`;
 
-        // Add to imports list
-        const importLine = `import { ${exportName} } from '../../media/${path.relative(outputFolder, outputFilePath).replace(/\\/g, '/')}';`;
-        imports.push(importLine);
+	html = html.replace(
+		/(<script[^>]*id=["']app-constants["'][^>]*>)([\s\S]*?)(<\/script>)/,
+		(_, startTag, scriptContent, endTag) => {
+			const cleanedScript = scriptContent
+				.replace(/window\.mediaData\s*=\s*\{[\s\S]*?\};?/, "")
+				.trim();
+			return `${startTag}\n${constantsObject}\n${cleanedScript}\n${endTag}`;
+		}
+	);
 
-        console.log(`Processed: ${entry.name} -> ${outputFilePath}`);
-      }
+	fs.writeFileSync(htmlPath, html, "utf-8");
+	console.log("✅ Injected base64 object into <script id='app-constants'>");
+}
+
+/**
+ * Generate export code for FBX files with usage instructions
+ * @param {string} exportName - The variable name
+ * @param {string} base64Content - The base64 encoded content
+ * @param {string} mimeType - The MIME type
+ * @returns {string} Export code
+ */
+function generateFbxExport(exportName, base64Content, mimeType) {
+	return `
+// Base64 encoded FBX model
+export const ${exportName} = "data:${mimeType};base64,${base64Content}";
+
+/* 
+  To use this FBX model in Three.js with Phaser:
+
+  import { ${exportName} } from './path/to/this/file';
+  import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+
+  // In your scene:
+  loadModel() {
+    // Convert data URL to blob
+    const base64 = ${exportName}.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
     }
+    
+    const blob = new Blob([bytes.buffer], { type: '${mimeType}' });
+    const url = URL.createObjectURL(blob);
+    
+    // Load with FBXLoader
+    const loader = new FBXLoader();
+    loader.load(
+      url,
+      (object) => {
+        // Position and scale
+        object.position.set(0, 0, 0);
+        object.scale.set(0.1, 0.1, 0.1);
+        
+        // Add to scene
+        this.threeScene.add(object);
+        
+        // Clean up
+        URL.revokeObjectURL(url);
+      },
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+      (error) => {
+        console.error('Error loading model:', error);
+      }
+    );
   }
-
-  // Start processing the input folder
-  await processFolder(inputFolder);
-
-  // Write the imports list to a text file
-  const importsFilePath = path.join(outputFolder, 'imports.txt');
-  fs.writeFileSync(importsFilePath, imports.join('\n'));
-  console.log(`Imports file written to: ${importsFilePath}`);
+*/
+`;
 }
 
 /**
@@ -70,18 +126,19 @@ async function encodeFilesToBase64(inputFolder, outputFolder) {
  * @returns {string} MIME type.
  */
 function getMimeType(ext) {
-  const mimeTypes = {
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    gif: 'image/gif',
-    svg: 'image/svg+xml',
-    json: 'application/json',
-    atlas: 'text/plain',
-    mp3: 'audio/mpeg',
-    wav: 'audio/wav',
-  };
-  return mimeTypes[ext.toLowerCase()] || 'application/octet-stream';
+	const mimeTypes = {
+		png: "image/png",
+		jpg: "image/jpeg",
+		jpeg: "image/jpeg",
+		gif: "image/gif",
+		svg: "image/svg+xml",
+		json: "application/json",
+		atlas: "text/plain",
+		mp3: "audio/mpeg",
+		wav: "audio/wav",
+		fbx: "application/octet-stream",
+	};
+	return mimeTypes[ext.toLowerCase()] || "application/octet-stream";
 }
 
 /**
@@ -90,11 +147,11 @@ function getMimeType(ext) {
  * @returns {string} The camelCase version of the string.
  */
 function camelCase(str) {
-  return str.replace(/[-_](.)/g, (_, char) => char.toUpperCase());
+	return str.replace(/[-_](.)/g, (_, char) => char.toUpperCase());
 }
 
 // Example usage
-const inputFolder = './public/assets'; // Replace with your input folder
-const outputFolder = './media'; // Replace with your output folder
+const inputFolder = "./public/assets"; // Replace with your input folder
+const outputFolder = "./media"; // Replace with your output folder
 
 encodeFilesToBase64(inputFolder, outputFolder).catch(console.error);
